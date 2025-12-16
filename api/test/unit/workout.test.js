@@ -91,40 +91,71 @@ describe("Workout Controller (with exercises populated)", () => {
       const newWorkout = {
         _id: "10",
         name: "Leg Day",
-        duration: 60,
-        exercises: [{ _id: "e4", Title: "Lunge", Level: "Intermediate" }],
+        template: false,
+        userId: 7,
+        exercises: [
+          {
+            _id: "e4",
+            Title: "Lunge",
+            Level: "Intermediate",
+            sets: [{ rep: 10, weight: 40 }],
+          },
+        ],
       };
 
-      // controller will forward body to model.create (mocked)
       req.body = {
         name: "Leg Day",
-        duration: 60,
-        exercises: ["e4"],
+        userId: 7,
+        template: false,
+        exercises: [
+          {
+            exercise: "e4",
+            rest: 90,
+            sets: [{ rep: 10, weight: 40 }],
+          },
+        ],
       };
+
       Workout.create.mockResolvedValue(newWorkout);
 
       await WorkoutController.createWorkout(req, res, next);
 
       expect(Workout.create).toHaveBeenCalledWith({
         name: "Leg Day",
-        duration: 60,
-        exercises: ["e4"],
+        userId: 7,
+        template: false,
+        exercises: [
+          {
+            exercise: "e4",
+            rest: 90,
+            sets: [{ rep: 10, weight: 40 }],
+          },
+        ],
       });
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(newWorkout);
 
       const returned = res.json.mock.calls[0][0];
-      expect(returned.exercises[0].Title).toBe("Lunge");
+      expect(returned.exercises[0].sets[0].rep).toBe(10);
     });
 
-    it("should call next on creation error", async () => {
-      const err = new Error("Invalid");
-      req.body = {};
-      Workout.create.mockRejectedValue(err);
+    it("should return 400 on validation error", async () => {
+      // Missing sets -> invalid
+      req.body = {
+        name: "Invalid",
+        userId: 1,
+        template: false,
+        exercises: [{ exercise: "e1", rest: 60, sets: [] }],
+      };
 
       await WorkoutController.createWorkout(req, res, next);
 
-      expect(next).toHaveBeenCalledWith(err);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: expect.stringContaining("au moins un set"),
+        })
+      );
     });
   });
 
@@ -133,35 +164,64 @@ describe("Workout Controller (with exercises populated)", () => {
       const updated = {
         _id: "1",
         name: "Updated",
-        duration: 50,
-        exercises: [{ _id: "e5", Title: "Deadlift", Level: "Advanced" }],
+        template: false,
+        userId: 3,
+        exercises: [
+          {
+            _id: "e5",
+            Title: "Deadlift",
+            Level: "Advanced",
+            sets: [{ rep: 5, weight: 120 }],
+          },
+        ],
       };
       req.params.id = "1";
-      req.body = { name: "Updated", duration: 50, exercises: ["e5"] };
+      req.body = {
+        name: "Updated",
+        userId: 3,
+        template: false,
+        exercises: [
+          { exercise: "e5", rest: 120, sets: [{ rep: 5, weight: 120 }] },
+        ],
+      };
       Workout.update.mockResolvedValue(updated);
 
       await WorkoutController.updateWorkout(req, res, next);
 
       expect(Workout.update).toHaveBeenCalledWith("1", {
         name: "Updated",
-        duration: 50,
-        exercises: ["e5"],
+        userId: 3,
+        template: false,
+        exercises: [
+          { exercise: "e5", rest: 120, sets: [{ rep: 5, weight: 120 }] },
+        ],
       });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(updated);
 
       const returned = res.json.mock.calls[0][0];
-      expect(returned.exercises[0].Title).toBe("Deadlift");
+      expect(returned.exercises[0].sets[0].weight).toBe(120);
     });
 
-    it("should call next on update error", async () => {
-      const err = new Error("Update fail");
-      req.params.id = "bad";
-      Workout.update.mockRejectedValue(err);
+    it("should return 400 on validation error", async () => {
+      req.params.id = "1";
+      req.body = {
+        name: "Bad",
+        exercises: [
+          { exercise: "e5", rest: 120, sets: [{ rep: 0 }] }, // rep invalid
+        ],
+      };
 
       await WorkoutController.updateWorkout(req, res, next);
 
-      expect(next).toHaveBeenCalledWith(err);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: expect.stringContaining(
+            "Exercice 1, set 1: rep doit être >= 1."
+          ),
+        })
+      );
     });
   });
 
