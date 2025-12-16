@@ -31,6 +31,21 @@ router.get("/", ctrl.getWorkout);
 
 /**
  * @openapi
+ * /api/workouts/templates:
+ *   get:
+ *     summary: Récupérer tous les templates de workouts
+ *     description: Retourne la liste des workouts templates partageables entre utilisateurs
+ *     tags: [Workouts]
+ *     responses:
+ *       200:
+ *         description: Liste des templates récupérée avec succès
+ *       500:
+ *         description: Erreur serveur
+ */
+router.get("/templates", ctrl.getTemplates);
+
+/**
+ * @openapi
  * /api/workouts/{id}:
  *   get:
  *     summary: Récupérer un workout par ID
@@ -70,6 +85,23 @@ router.get("/:id", ctrl.getWorkoutById);
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/WorkoutInput'
+ *           example:
+ *             name: "Morning Routine"
+ *             userId: 1
+ *             template: false
+ *             exercises:
+ *               - exercise: "676052bc8bb421fef3e3df01"
+ *                 rest: 60
+ *                 sets:
+ *                   - rep: 10
+ *                     weight: 50   # optionnel
+ *                   - rep: 8
+ *                     duration: 30 # optionnel
+ *               - exercise: "676052bc8bb421fef3e3df02"
+ *                 rest: 90
+ *                 sets:
+ *                   - rep: 12
+ *                   - rep: 10
  *     responses:
  *       201:
  *         description: Workout créé avec succès
@@ -117,6 +149,47 @@ router.post("/", ctrl.createWorkout);
  *         description: Erreur serveur
  */
 router.put("/:id", ctrl.updateWorkout);
+
+/**
+ * @openapi
+ * /api/workouts/templates/{templateId}/clone:
+ *   post:
+ *     summary: Cloner un template de workout
+ *     description: Crée une copie personnelle d'un template de workout pour un utilisateur
+ *     tags: [Workouts]
+ *     parameters:
+ *       - name: templateId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID du template à cloner
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *             properties:
+ *               userId:
+ *                 type: number
+ *                 description: ID de l'utilisateur qui clone le template
+ *               customName:
+ *                 type: string
+ *                 description: Nom personnalisé pour le workout cloné (optionnel)
+ *     responses:
+ *       201:
+ *         description: Template cloné avec succès
+ *       400:
+ *         description: Données manquantes
+ *       404:
+ *         description: Template non trouvé
+ *       500:
+ *         description: Erreur serveur
+ */
+router.post("/templates/:templateId/clone", ctrl.cloneTemplate);
 
 /**
  * @openapi

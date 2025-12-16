@@ -58,12 +58,6 @@ const components = {
       properties: {
         _id: { type: "string", description: "ID unique du workout" },
         name: { type: "string", description: "Nom du workout" },
-        duration: { type: "number", description: "Durée en minutes" },
-        date: {
-          type: "string",
-          format: "date-time",
-          description: "Date du workout",
-        },
         exercises: {
           type: "array",
           items: { $ref: "#/components/schemas/Exercise" },
