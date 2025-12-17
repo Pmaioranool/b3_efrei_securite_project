@@ -60,10 +60,6 @@ const swaggerSetup = require("./swagger-setup");
 // Après avoir configuré vos routes
 swaggerSetup(app);
 
-app.get("/pinte", (req, res) => {
-  res.send("+1 pinte");
-});
-
 // 404
 app.use((req, res) => res.status(404).json({ error: "Route inconnue" }));
 
