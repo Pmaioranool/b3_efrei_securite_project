@@ -4,6 +4,7 @@ const cors = require("cors");
 const PORT = 3000;
 const { pool } = require("./config/db.postgres");
 const { connectMongo } = require("./config/db.mongo");
+const { authorizeRoles } = require("./middlewares/auth.middleware");
 
 // Configuration CORS
 app.use(
@@ -61,7 +62,7 @@ app.get("/api/test-db", async (req, res) => {
 const fs = require("fs");
 const path = require("path");
 
-app.get("/api/db/init", async (req, res) => {
+app.get("/api/db/init", authorizeRoles("ADMIN"), async (req, res) => {
   try {
     const sqlFile = fs.readFileSync(
       path.join(__dirname, "../sql/init.sql"),
@@ -77,7 +78,7 @@ app.get("/api/db/init", async (req, res) => {
   }
 });
 
-app.get("/api/db/reset", async (req, res) => {
+app.get("/api/db/reset", authorizeRoles("ADMIN"), async (req, res) => {
   try {
     // sécurité singe
     if (process.env.NODE_ENV !== "DEVELOPMENT") {
@@ -111,6 +112,12 @@ app.get("/api/db/reset", async (req, res) => {
       error: error.message,
     });
   }
+});
+
+app.get("/api/test/roles", authorizeRoles("admin"), (req, res) => {
+  res.json({
+    message: "Vous avez accès à cette ressource réservée aux ADMIN.",
+  });
 });
 
 // Mount routes
