@@ -94,7 +94,13 @@ router.get("/test-db", authorizeRoles("ADMIN"), async (req, res) => {
  *       500:
  *         description: Erreur lors de l'initialisation
  */
-router.get("/db/init", authorizeRoles("ADMIN"), async (req, res) => {
+router.get("/db/init", async (req, res) => {
+  if (process.env.NODE_ENV !== "DEVELOPMENT") {
+    return res.status(403).json({
+      status: "Forbidden",
+      error: "Database reset is not allowed in this environment",
+    });
+  }
   try {
     const sqlFile = fs.readFileSync(
       path.join(__dirname, "../../sql/init.sql"),
