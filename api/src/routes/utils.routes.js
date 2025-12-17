@@ -101,6 +101,14 @@ router.get("/db/init", async (req, res) => {
       error: "Database reset is not allowed in this environment",
     });
   }
+
+  if (req.params.key !== process.env.DB_INIT_KEY) {
+    return res.status(403).json({
+      status: "Forbidden",
+      error: "Invalid initialization key",
+    });
+  }
+
   try {
     const sqlFile = fs.readFileSync(
       path.join(__dirname, "../../sql/init.sql"),
@@ -116,7 +124,7 @@ router.get("/db/init", async (req, res) => {
   }
 });
 
-router.get("/db/reset", authorizeRoles("ADMIN"), async (req, res) => {
+router.get("/db/reset", async (req, res) => {
   /**
    * @openapi
    * /api/db/reset:
@@ -167,6 +175,13 @@ router.get("/db/reset", authorizeRoles("ADMIN"), async (req, res) => {
       return res.status(400).json({
         status: "Bad Request",
         error: 'Please confirm reset by adding "?sure=true" to the request URL',
+      });
+    }
+
+    if (req.params.key !== process.env.DB_INIT_KEY) {
+      return res.status(403).json({
+        status: "Forbidden",
+        error: "Invalid initialization key",
       });
     }
     const sqlResetFile = fs.readFileSync(
