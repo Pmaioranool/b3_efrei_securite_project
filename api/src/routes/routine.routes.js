@@ -1,5 +1,14 @@
 const router = require("express").Router();
 const ctrl = require("../controllers/routine.controller");
+const { authenticateToken } = require("../middlewares/auth.middleware");
+const {
+  validateRoutineCreation,
+  validateRoutineUpdate,
+  validateRoutineId,
+} = require("../middlewares/routine.validation");
+
+// Protéger toutes les routes de routine avec authentification
+router.use(authenticateToken);
 
 /**
  * @openapi
@@ -55,7 +64,7 @@ router.get("/", ctrl.getRoutine);
  *       500:
  *         description: Erreur serveur
  */
-router.get("/:id", ctrl.getRoutineById);
+router.get("/:id", validateRoutineId, ctrl.getRoutineById);
 
 /**
  * @openapi
@@ -82,7 +91,7 @@ router.get("/:id", ctrl.getRoutineById);
  *       500:
  *         description: Erreur serveur
  */
-router.post("/", ctrl.createRoutine);
+router.post("/", validateRoutineCreation, ctrl.createRoutine);
 
 /**
  * @openapi
@@ -118,7 +127,12 @@ router.post("/", ctrl.createRoutine);
  *       500:
  *         description: Erreur serveur
  */
-router.put("/:id", ctrl.updateRoutine);
+router.put(
+  "/:id",
+  validateRoutineId,
+  validateRoutineUpdate,
+  ctrl.updateRoutine
+);
 
 /**
  * @openapi
@@ -150,4 +164,6 @@ router.put("/:id", ctrl.updateRoutine);
  *       500:
  *         description: Erreur serveur
  */
-router.delete("/:id", ctrl.deleteRoutine);
+router.delete("/:id", validateRoutineId, ctrl.deleteRoutine);
+
+module.exports = router;
