@@ -1,6 +1,9 @@
 const router = require("express").Router();
 const ctrl = require("../controllers/routine.controller");
-const { authenticateToken } = require("../middlewares/auth.middleware");
+const {
+  authenticateToken,
+  authorizeOwnResource,
+} = require("../middlewares/auth.middleware");
 const {
   validateRoutineCreation,
   validateRoutineUpdate,
@@ -36,7 +39,7 @@ router.use(authenticateToken);
  *       500:
  *         description: Erreur serveur
  */
-router.get("/", ctrl.getRoutine);
+router.get("/", authorizeOwnResource("userId"), ctrl.getRoutine);
 
 /**
  * @openapi

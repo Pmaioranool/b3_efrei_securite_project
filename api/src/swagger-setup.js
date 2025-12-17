@@ -3,6 +3,15 @@ const swaggerUi = require("swagger-ui-express");
 
 // Schémas globaux pour la documentation
 const components = {
+  securitySchemes: {
+    bearerAuth: {
+      type: "http",
+      scheme: "bearer",
+      bearerFormat: "JWT",
+      description:
+        "Utiliser le header Authorization: Bearer <token> pour les routes protégées",
+    },
+  },
   schemas: {
     Exercise: {
       type: "object",
@@ -95,11 +104,23 @@ const components = {
       type: "object",
       properties: {
         id: { type: "integer", description: "ID unique de l'utilisateur" },
-        name: { type: "string", description: "Nom de l'utilisateur" },
+        firstname: { type: "string", description: "Prénom" },
+        lastname: { type: "string", description: "Nom" },
+        pseudonym: { type: "string", description: "Pseudonyme unique" },
+        birthdate: {
+          type: "string",
+          format: "date",
+          description: "Date de naissance",
+        },
         email: {
           type: "string",
           format: "email",
           description: "Email de l'utilisateur",
+        },
+        role: {
+          type: "string",
+          enum: ["USER", "ADMIN", "COACH"],
+          description: "Rôle de l'utilisateur",
         },
         workouts_completed: {
           type: "integer",
@@ -116,9 +137,19 @@ const components = {
     },
     UserInput: {
       type: "object",
-      required: ["name", "email", "password"],
+      required: [
+        "firstname",
+        "lastname",
+        "pseudonym",
+        "birthdate",
+        "email",
+        "password",
+      ],
       properties: {
-        name: { type: "string", example: "John Doe" },
+        firstname: { type: "string", example: "John" },
+        lastname: { type: "string", example: "Doe" },
+        pseudonym: { type: "string", example: "johndoe" },
+        birthdate: { type: "string", format: "date", example: "1990-01-01" },
         email: {
           type: "string",
           format: "email",
@@ -130,12 +161,21 @@ const components = {
           minLength: 6,
           example: "securepassword123",
         },
+        role: {
+          type: "string",
+          enum: ["USER", "ADMIN", "COACH"],
+          example: "USER",
+          description: "Rôle (optionnel, par défaut USER)",
+        },
       },
     },
     UserUpdate: {
       type: "object",
       properties: {
-        name: { type: "string", example: "John Doe Updated" },
+        firstname: { type: "string", example: "John" },
+        lastname: { type: "string", example: "Doe" },
+        pseudonym: { type: "string", example: "johndoe" },
+        birthdate: { type: "string", format: "date", example: "1990-01-01" },
         email: {
           type: "string",
           format: "email",

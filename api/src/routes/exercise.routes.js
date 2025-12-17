@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const ctrl = require("../controllers/Exercise.controller");
+const { authorizeRoles } = require("../middlewares/auth.middleware");
 
 /**
  * @openapi
@@ -15,6 +16,8 @@ const ctrl = require("../controllers/Exercise.controller");
  *     summary: Récupérer tous les exercices
  *     description: Retourne la liste des exercices avec possibilité de filtrage
  *     tags: [Exercises]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: title
  *         in: query
@@ -58,7 +61,7 @@ const ctrl = require("../controllers/Exercise.controller");
  *       500:
  *         description: Erreur serveur
  */
-router.get("/", ctrl.getExercise);
+router.get("/", authorizeRoles("ADMIN"), ctrl.getExercise);
 
 /**
  * @openapi
@@ -67,6 +70,8 @@ router.get("/", ctrl.getExercise);
  *     summary: Récupérer un exercice par ID
  *     description: Retourne les détails d'un exercice spécifique
  *     tags: [Exercises]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -86,7 +91,7 @@ router.get("/", ctrl.getExercise);
  *       500:
  *         description: Erreur serveur
  */
-router.get("/:id", ctrl.getExerciseById);
+router.get("/:id", authorizeRoles("ADMIN"), ctrl.getExerciseById);
 
 /**
  * @openapi
@@ -95,6 +100,8 @@ router.get("/:id", ctrl.getExerciseById);
  *     summary: Créer un nouvel exercice
  *     description: Crée un nouvel exercice avec les informations fournies
  *     tags: [Exercises]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -113,7 +120,7 @@ router.get("/:id", ctrl.getExerciseById);
  *       500:
  *         description: Erreur serveur
  */
-router.post("/", ctrl.createExercise);
+router.post("/", authorizeRoles("ADMIN"), ctrl.createExercise);
 
 /**
  * @openapi
@@ -122,6 +129,8 @@ router.post("/", ctrl.createExercise);
  *     summary: Mettre à jour un exercice
  *     description: Met à jour les informations d'un exercice existant
  *     tags: [Exercises]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -147,7 +156,7 @@ router.post("/", ctrl.createExercise);
  *       500:
  *         description: Erreur serveur
  */
-router.put("/:id", ctrl.updateExercise);
+router.put("/:id", authorizeRoles("ADMIN"), ctrl.updateExercise);
 
 /**
  * @openapi
@@ -156,6 +165,8 @@ router.put("/:id", ctrl.updateExercise);
  *     summary: Supprimer un exercice
  *     description: Supprime un exercice de la base de données
  *     tags: [Exercises]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -179,6 +190,6 @@ router.put("/:id", ctrl.updateExercise);
  *       500:
  *         description: Erreur serveur
  */
-router.delete("/:id", ctrl.deleteExercise);
+router.delete("/:id", authorizeRoles("ADMIN"), ctrl.deleteExercise);
 
 module.exports = router;
