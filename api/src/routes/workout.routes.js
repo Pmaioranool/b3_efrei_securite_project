@@ -1,5 +1,9 @@
 const router = require("express").Router();
 const ctrl = require("../controllers/Workout.controller");
+const {
+  authorizeOwnResource,
+  authorizeRoles,
+} = require("../middlewares/auth.middleware");
 
 /**
  * @openapi
@@ -27,7 +31,7 @@ const ctrl = require("../controllers/Workout.controller");
  *       500:
  *         description: Erreur serveur
  */
-router.get("/", ctrl.getWorkout);
+router.get("/", authorizeRoles("ADMIN"), ctrl.getWorkout);
 
 /**
  * @openapi
@@ -42,7 +46,7 @@ router.get("/", ctrl.getWorkout);
  *       500:
  *         description: Erreur serveur
  */
-router.get("/templates", ctrl.getTemplates);
+router.get("/templates", authorizeOwnResource(), ctrl.getTemplates);
 
 /**
  * @openapi
@@ -70,7 +74,7 @@ router.get("/templates", ctrl.getTemplates);
  *       500:
  *         description: Erreur serveur
  */
-router.get("/:id", ctrl.getWorkoutById);
+router.get("/:id", authorizeOwnResource(), ctrl.getWorkoutById);
 
 /**
  * @openapi
@@ -114,7 +118,7 @@ router.get("/:id", ctrl.getWorkoutById);
  *       500:
  *         description: Erreur serveur
  */
-router.post("/", ctrl.createWorkout);
+router.post("/", authorizeOwnResource(), ctrl.createWorkout);
 
 /**
  * @openapi
@@ -148,7 +152,7 @@ router.post("/", ctrl.createWorkout);
  *       500:
  *         description: Erreur serveur
  */
-router.put("/:id", ctrl.updateWorkout);
+router.put("/:id", authorizeOwnResource(), ctrl.updateWorkout);
 
 /**
  * @openapi
@@ -221,6 +225,6 @@ router.post("/templates/:templateId/clone", ctrl.cloneTemplate);
  *       500:
  *         description: Erreur serveur
  */
-router.delete("/:id", ctrl.deleteWorkout);
+router.delete("/:id", authorizeOwnResource(), ctrl.deleteWorkout);
 
 module.exports = router;

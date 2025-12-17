@@ -14,14 +14,15 @@ const WorkoutSchema = new Schema(
           ref: "Exercise",
           required: true,
         },
-        rest: { type: Number, default: 60, required: true }, // rest time in seconds
         // Sets obligatoires : au moins 1 set requis
-        // - rep : nombre de répétitions (OBLIGATOIRE)
+        // - rest : temps de repos en secondes
+        // - rep : nombre de répétitions (OPTIONNEL, pour exercices à répétitions)
         // - weight : charge en kg (OPTIONNEL, pour suivi personnel)
         // - duration : durée en secondes (OPTIONNEL, pour exercices chronométrés)
         sets: {
           type: [
             {
+              rest: { type: Number, default: 60, required: true }, // rest time in seconds
               rep: { type: Number, required: true, min: 1 },
               weight: { type: Number, min: 0 }, // Optionnel : charge en kg
               duration: { type: Number, min: 0 }, // Optionnel : durée en secondes
