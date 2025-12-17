@@ -57,7 +57,10 @@ describe("Auth Controller", () => {
   describe("register", () => {
     it("should register user successfully", async () => {
       req.body = {
-        name: "New User",
+        firstname: "New",
+        lastname: "User",
+        pseudonym: "newuser",
+        birthdate: "1990-01-01",
         email: "new@example.com",
         password: "password123",
       };
@@ -65,8 +68,12 @@ describe("Auth Controller", () => {
       User.getByEmail.mockResolvedValue(null);
       User.create.mockResolvedValue({
         id: 2,
-        name: "New User",
+        firstname: "New",
+        lastname: "User",
+        pseudonym: "newuser",
+        birthdate: "1990-01-01",
         email: "new@example.com",
+        role: "USER",
       });
       JWTService.generateAccessToken.mockReturnValue("access-token");
       JWTService.generateRefreshToken.mockReturnValue("refresh-token");
@@ -75,7 +82,10 @@ describe("Auth Controller", () => {
 
       expect(User.getByEmail).toHaveBeenCalledWith("new@example.com");
       expect(User.create).toHaveBeenCalledWith({
-        name: "New User",
+        firstname: "New",
+        lastname: "User",
+        pseudonym: "newuser",
+        birthdate: "1990-01-01",
         email: "new@example.com",
         password: "password123",
       });

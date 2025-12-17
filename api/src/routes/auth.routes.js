@@ -1,6 +1,11 @@
 const router = require("express").Router();
 const AuthController = require("../controllers/auth.controller");
 const { authenticateToken } = require("../middlewares/auth.middleware");
+const {
+  validateRegister,
+  validateLogin,
+  validateRefresh,
+} = require("../middlewares/validator/auth.validation");
 
 /**
  * @openapi
@@ -50,7 +55,27 @@ const { authenticateToken } = require("../middlewares/auth.middleware");
  *       409:
  *         description: Utilisateur déjà existant
  */
-router.post("/register", AuthController.register);
+router.post("/register", validateRegister, AuthController.register);
+
+/**
+ * @openapi
+ * /api/auth/register/admin:
+ *   post:
+ *    summary: Inscription d'un nouvel administrateur
+ *   tags: [Authentication]
+ *   requestBody:
+ *    required: true
+ *   content:
+ *    application/json:
+ *     schema:
+ *      type: object
+ *     required:
+ *      - name
+ *     - email
+ *    - password
+ *    properties:
+ */
+router.post("/register/admin", validateRegister, AuthController.registerAdmin);
 
 /**
  * @openapi
@@ -82,7 +107,7 @@ router.post("/register", AuthController.register);
  *       401:
  *         description: Identifiants invalides
  */
-router.post("/login", AuthController.login);
+router.post("/login", validateLogin, AuthController.login);
 
 /**
  * @openapi
@@ -108,7 +133,7 @@ router.post("/login", AuthController.login);
  *       401:
  *         description: Refresh token invalide
  */
-router.post("/refresh", AuthController.refresh);
+router.post("/refresh", validateRefresh, AuthController.refresh);
 
 /**
  * @openapi

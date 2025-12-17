@@ -5,7 +5,7 @@ const {
   validateRoutineCreation,
   validateRoutineUpdate,
   validateRoutineId,
-} = require("../middlewares/routine.validation");
+} = require("../middlewares/validator/routine.validation");
 
 // Protéger toutes les routes de routine avec authentification
 router.use(authenticateToken);

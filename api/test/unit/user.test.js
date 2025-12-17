@@ -14,6 +14,15 @@ describe("User Controller", () => {
     };
     next = jest.fn();
     jest.clearAllMocks();
+
+    // S'assurer que toutes les méthodes utilisées sont des mocks
+    User.getAll = jest.fn();
+    User.getById = jest.fn();
+    User.update = jest.fn();
+    User.updatePassword = jest.fn();
+    User.updateLastLogin = jest.fn();
+    User.incrementWorkoutsCompleted = jest.fn();
+    User.delete = jest.fn();
   });
 
   describe("getUser", () => {

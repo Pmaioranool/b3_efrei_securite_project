@@ -1,8 +1,10 @@
 const User = require("../models/User.model");
 
 exports.getUser = async (req, res, next) => {
+  const page = parseInt(req.query.page) || 1;
+  const pagesize = parseInt(req.query.pagesize) || 10;
   try {
-    const users = await User.getAll({});
+    const users = await User.getAll(page, pagesize);
     return res.status(200).json(users);
   } catch (e) {
     next(e);
@@ -20,7 +22,7 @@ exports.getUserById = async (req, res, next) => {
 
 exports.updateUser = async (req, res, next) => {
   try {
-    const { name, email, password, workouts_completed } = req.body;
+    const { name, email, password } = req.body;
     const updatedUser = await User.update(req.params.id, {
       name,
       email,

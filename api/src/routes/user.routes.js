@@ -1,5 +1,13 @@
 const router = require("express").Router();
 const ctrl = require("../controllers/User.controller");
+const {
+  validateUserList,
+  validateUserIdParam,
+  validateUserUpdate,
+  validateUserPassword,
+  validateUserLastLogin,
+  validateUserWorkoutIncrement,
+} = require("../middlewares/validator/user.validation");
 
 /**
  * @openapi
@@ -27,7 +35,7 @@ const ctrl = require("../controllers/User.controller");
  *       500:
  *         description: Erreur serveur
  */
-router.get("/", ctrl.getUser);
+router.get("/", validateUserList, ctrl.getUser);
 
 /**
  * @openapi
@@ -55,7 +63,7 @@ router.get("/", ctrl.getUser);
  *       500:
  *         description: Erreur serveur
  */
-router.get("/:id", ctrl.getUserById);
+router.get("/:id", validateUserIdParam, ctrl.getUserById);
 
 /**
  * @openapi
@@ -83,7 +91,7 @@ router.get("/:id", ctrl.getUserById);
  *         description: Erreur serveur
  */
 
-router.put("/:id", ctrl.updateUser);
+router.put("/:id", validateUserUpdate, ctrl.updateUser);
 
 /**
  * @openapi
@@ -125,7 +133,7 @@ router.put("/:id", ctrl.updateUser);
  *       500:
  *         description: Erreur serveur
  */
-router.put("/:id/password", ctrl.updateUserPassword);
+router.put("/:id/password", validateUserPassword, ctrl.updateUserPassword);
 
 /**
  * @openapi
@@ -166,7 +174,7 @@ router.put("/:id/password", ctrl.updateUserPassword);
  *       500:
  *         description: Erreur serveur
  */
-router.put("/:id/last-login", ctrl.updateUserLastLogin);
+router.put("/:id/last-login", validateUserLastLogin, ctrl.updateUserLastLogin);
 
 /**
  * @openapi
@@ -209,7 +217,11 @@ router.put("/:id/last-login", ctrl.updateUserLastLogin);
  *       500:
  *         description: Erreur serveur
  */
-router.put("/:id/workouts-completed", ctrl.incrementUserWorkoutsCompleted);
+router.put(
+  "/:id/workouts-completed",
+  validateUserWorkoutIncrement,
+  ctrl.incrementUserWorkoutsCompleted
+);
 
 /**
  * @openapi
@@ -241,6 +253,6 @@ router.put("/:id/workouts-completed", ctrl.incrementUserWorkoutsCompleted);
  *       500:
  *         description: Erreur serveur
  */
-router.delete("/:id", ctrl.deleteUser);
+router.delete("/:id", validateUserIdParam, ctrl.deleteUser);
 
 module.exports = router;

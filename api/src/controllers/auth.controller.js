@@ -4,12 +4,30 @@ const JWTService = require("../utils/jwt");
 class AuthController {
   async register(req, res, next) {
     try {
-      const { name, email, password } = req.body;
+      const {
+        firstname,
+        lastname,
+        pseudonym,
+        email,
+        password,
+        birthdate,
+        role: inputRole,
+      } = req.body;
+      let role = inputRole || "USER";
+      role === "ADMIN" && (role = "USER"); // Prevent users from self-assigning admin role
 
-      if (!name || !email || !password) {
+      if (
+        !firstname ||
+        !lastname ||
+        !email ||
+        !password ||
+        !pseudonym ||
+        !birthdate
+      ) {
         return res.status(400).json({
           error: "Données manquantes",
-          message: "Le nom, email et mot de passe sont requis",
+          message:
+            "Le nom, prénom, pseudonyme, email, date de naissance et mot de passe sont requis",
         });
       }
 
@@ -28,8 +46,18 @@ class AuthController {
         });
       }
 
+      if (await User.getByPseudonym(pseudonym)) {
+        return res.status(409).json({
+          error: "Pseudonyme déjà utilisé",
+          message: "Ce pseudonyme est déjà pris, veuillez en choisir un autre",
+        });
+      }
+
       const newUser = await User.create({
-        name,
+        firstname,
+        lastname,
+        pseudonym,
+        birthdate,
         email,
         password,
       });
@@ -37,6 +65,7 @@ class AuthController {
       const userPayload = {
         userId: newUser.id,
         email: newUser.email,
+        role: newUser.role,
       };
 
       const accessToken = JWTService.generateAccessToken(userPayload);
@@ -46,12 +75,80 @@ class AuthController {
         message: "Utilisateur créé avec succès",
         user: {
           id: newUser.id,
-          name: newUser.name,
+          firstname: newUser.firstname,
+          lastname: newUser.lastname,
+          pseudonym: newUser.pseudonym,
+          birthdate: newUser.birthdate,
           email: newUser.email,
+          role: role,
         },
         tokens: {
           accessToken,
           refreshToken,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async registerAdmin(req, res, next) {
+    try {
+      const { firstname, lastname, pseudonym, email, password, birthdate } =
+        req.body;
+      const role = "ADMIN";
+      if (
+        !firstname ||
+        !lastname ||
+        !email ||
+        !password ||
+        !pseudonym ||
+        !birthdate
+      ) {
+        return res.status(400).json({
+          error: "Données manquantes",
+          message:
+            "Le nom, prénom, pseudonyme, email, date de naissance et mot de passe sont requis",
+        });
+      }
+      if (password.length < 6) {
+        return res.status(400).json({
+          error: "Mot de passe trop court",
+          message: "Le mot de passe doit contenir au moins 6 caractères",
+        });
+      }
+      const existingUser = await User.getByEmail(email);
+      if (existingUser) {
+        return res.status(409).json({
+          error: "Utilisateur déjà existant",
+          message: "Un utilisateur avec cet email existe déjà",
+        });
+      }
+      if (await User.getByPseudonym(pseudonym)) {
+        return res.status(409).json({
+          error: "Pseudonyme déjà utilisé",
+          message: "Ce pseudonyme est déjà pris, veuillez en choisir un autre",
+        });
+      }
+      const newUser = await User.create({
+        firstname,
+        lastname,
+        pseudonym,
+        birthdate,
+        email,
+        password,
+        role,
+      });
+      res.status(201).json({
+        message: "Administrateur créé avec succès",
+        user: {
+          id: newUser.id,
+          firstname: newUser.firstname,
+          lastname: newUser.lastname,
+          pseudonym: newUser.pseudonym,
+          birthdate: newUser.birthdate,
+          email: newUser.email,
+          role: role,
         },
       });
     } catch (error) {
@@ -102,6 +199,7 @@ class AuthController {
       const userPayload = {
         userId: user.id,
         email: user.email,
+        role: user.role,
       };
 
       const accessToken = JWTService.generateAccessToken(userPayload);
@@ -116,6 +214,7 @@ class AuthController {
           name: user.name,
           email: user.email,
           last_login: user.last_login,
+          role: user.role,
         },
         tokens: {
           accessToken,
