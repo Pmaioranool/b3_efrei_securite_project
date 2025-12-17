@@ -1,6 +1,10 @@
 const router = require("express").Router();
 const ctrl = require("../controllers/User.controller");
 const {
+  authorizeRoles,
+  authorizeOwnResource,
+} = require("../middlewares/auth.middleware");
+const {
   validateUserList,
   validateUserIdParam,
   validateUserUpdate,
@@ -35,7 +39,7 @@ const {
  *       500:
  *         description: Erreur serveur
  */
-router.get("/", validateUserList, ctrl.getUser);
+router.get("/", validateUserList, authorizeRoles("ADMIN"), ctrl.getUser);
 
 /**
  * @openapi
@@ -63,7 +67,12 @@ router.get("/", validateUserList, ctrl.getUser);
  *       500:
  *         description: Erreur serveur
  */
-router.get("/:id", validateUserIdParam, ctrl.getUserById);
+router.get(
+  "/:id",
+  validateUserIdParam,
+  authorizeOwnResource(),
+  ctrl.getUserById
+);
 
 /**
  * @openapi
@@ -91,7 +100,7 @@ router.get("/:id", validateUserIdParam, ctrl.getUserById);
  *         description: Erreur serveur
  */
 
-router.put("/:id", validateUserUpdate, ctrl.updateUser);
+router.put("/:id", validateUserUpdate, authorizeOwnResource(), ctrl.updateUser);
 
 /**
  * @openapi
@@ -133,7 +142,12 @@ router.put("/:id", validateUserUpdate, ctrl.updateUser);
  *       500:
  *         description: Erreur serveur
  */
-router.put("/:id/password", validateUserPassword, ctrl.updateUserPassword);
+router.put(
+  "/:id/password",
+  validateUserPassword,
+  authorizeOwnResource(),
+  ctrl.updateUserPassword
+);
 
 /**
  * @openapi
@@ -174,7 +188,12 @@ router.put("/:id/password", validateUserPassword, ctrl.updateUserPassword);
  *       500:
  *         description: Erreur serveur
  */
-router.put("/:id/last-login", validateUserLastLogin, ctrl.updateUserLastLogin);
+router.put(
+  "/:id/last-login",
+  validateUserLastLogin,
+  authorizeOwnResource(),
+  ctrl.updateUserLastLogin
+);
 
 /**
  * @openapi
@@ -220,6 +239,7 @@ router.put("/:id/last-login", validateUserLastLogin, ctrl.updateUserLastLogin);
 router.put(
   "/:id/workouts-completed",
   validateUserWorkoutIncrement,
+  authorizeOwnResource(),
   ctrl.incrementUserWorkoutsCompleted
 );
 
@@ -253,6 +273,11 @@ router.put(
  *       500:
  *         description: Erreur serveur
  */
-router.delete("/:id", validateUserIdParam, ctrl.deleteUser);
+router.delete(
+  "/:id",
+  validateUserIdParam,
+  authorizeOwnResource(),
+  ctrl.deleteUser
+);
 
 module.exports = router;
