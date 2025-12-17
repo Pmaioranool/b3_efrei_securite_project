@@ -16,8 +16,19 @@ const RoutineSchema = new Schema(
       type: String,
       required: true,
       validate: {
-        validator: (value) => cronParser.parseExpression(value),
-        message: "Invalid cron expression",
+        validator: (value) => {
+          try {
+            const parse =
+              typeof cronParser === "function"
+                ? cronParser
+                : cronParser.parseExpression;
+            parse(value);
+            return true;
+          } catch (e) {
+            return false;
+          }
+        },
+        message: "Expression CRON invalide",
       },
     },
 
