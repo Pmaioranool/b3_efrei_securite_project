@@ -4,8 +4,17 @@ const JWTService = require("../utils/jwt");
 class AuthController {
   async register(req, res, next) {
     try {
-      const { firstname, lastname, pseudonym, email, password, birthdate } =
-        req.body;
+      const {
+        firstname,
+        lastname,
+        pseudonym,
+        email,
+        password,
+        birthdate,
+        role: inputRole,
+      } = req.body;
+      let role = inputRole || "USER";
+      role === "ADMIN" && (role = "USER"); // Prevent users from self-assigning admin role
 
       if (
         !firstname ||
