@@ -61,7 +61,7 @@ const { authorizeRoles } = require("../middlewares/auth.middleware");
  *       500:
  *         description: Erreur serveur
  */
-router.get("/", authorizeRoles("ADMIN"), ctrl.getExercise);
+router.get("/", ctrl.getExercise);
 
 /**
  * @openapi
@@ -91,7 +91,7 @@ router.get("/", authorizeRoles("ADMIN"), ctrl.getExercise);
  *       500:
  *         description: Erreur serveur
  */
-router.get("/:id", authorizeRoles("ADMIN"), ctrl.getExerciseById);
+router.get("/:id", ctrl.getExerciseById);
 
 /**
  * @openapi

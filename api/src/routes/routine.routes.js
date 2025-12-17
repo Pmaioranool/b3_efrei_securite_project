@@ -3,11 +3,12 @@ const ctrl = require("../controllers/routine.controller");
 const {
   authenticateToken,
   authorizeOwnResource,
+  authorizeRoles,
 } = require("../middlewares/auth.middleware");
 const {
   validateRoutineCreation,
-  validateRoutineUpdate,
-  validateRoutineId,
+  // validateRoutineUpdate,
+  // validateRoutineId,
 } = require("../middlewares/validator/routine.validation");
 
 // Protéger toutes les routes de routine avec authentification
@@ -39,7 +40,7 @@ router.use(authenticateToken);
  *       500:
  *         description: Erreur serveur
  */
-router.get("/", authorizeOwnResource("userId"), ctrl.getRoutine);
+router.get("/", authorizeRoles("admin"), ctrl.getRoutine);
 
 /**
  * @openapi
@@ -67,7 +68,7 @@ router.get("/", authorizeOwnResource("userId"), ctrl.getRoutine);
  *       500:
  *         description: Erreur serveur
  */
-router.get("/:id", validateRoutineId, ctrl.getRoutineById);
+router.get("/:id", ctrl.getRoutineById);
 
 /**
  * @openapi
@@ -132,8 +133,8 @@ router.post("/", validateRoutineCreation, ctrl.createRoutine);
  */
 router.put(
   "/:id",
-  validateRoutineId,
-  validateRoutineUpdate,
+  // validateRoutineId,
+  // validateRoutineUpdate,
   ctrl.updateRoutine
 );
 
@@ -167,6 +168,6 @@ router.put(
  *       500:
  *         description: Erreur serveur
  */
-router.delete("/:id", validateRoutineId, ctrl.deleteRoutine);
+router.delete("/:id", ctrl.deleteRoutine);
 
 module.exports = router;

@@ -96,16 +96,14 @@ exports.authorizeRoles = (...allowedRoles) => {
 exports.authorizeOwnResource = (paramName = "id") => {
   return (req, res, next) => {
     try {
-      if (!req.user) {
-        return res.status(401).json({
-          error: "Non authentifié",
-          message: "Vous devez être connecté pour accéder à cette ressource.",
-        });
-      }
+      const token = JWTService.extractTokenFromHeader(
+        req.headers.authorization
+      );
+      const decoded = JWTService.verifyAccessToken(token);
 
-      const userRole = (req.user.role || "").toLowerCase();
+      const userRole = (decoded.role || "").toLowerCase();
       const requestedResourceId = req.params[paramName];
-      const authenticatedUserId = req.user.userId;
+      const authenticatedUserId = decoded.userId;
 
       // Admin a accès à toutes les ressources
       if (userRole === "admin") {

@@ -4,7 +4,10 @@ const cronParser = require("cron-parser");
 
 const RoutineSchema = new Schema(
   {
-    userId: { type: Number, required: true },
+    userId: {
+      type: Number,
+      required: true,
+    },
 
     workoutId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -15,21 +18,7 @@ const RoutineSchema = new Schema(
     cron: {
       type: String,
       required: true,
-      validate: {
-        validator: (value) => {
-          try {
-            const parse =
-              typeof cronParser === "function"
-                ? cronParser
-                : cronParser.parseExpression;
-            parse(value);
-            return true;
-          } catch (e) {
-            return false;
-          }
-        },
-        message: "Expression CRON invalide",
-      },
+      trim: true, // 🔥 essentiel
     },
 
     timezone: {
