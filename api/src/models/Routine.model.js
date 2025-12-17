@@ -40,6 +40,10 @@ class Routine {
     return await RoutineModel.findById(id).populate("workoutId").exec();
   }
 
+  static async getByUserId(userId) {
+    return await RoutineModel.find({ userId }).populate("workoutId").exec();
+  }
+
   static async create({ userId, workoutId, cron, timezone = "Europe/Paris" }) {
     if (!userId || !workoutId || !cron) {
       throw new Error(
