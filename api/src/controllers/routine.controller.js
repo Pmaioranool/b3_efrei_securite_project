@@ -18,6 +18,16 @@ exports.getRoutineById = async (req, res, next) => {
   }
 };
 
+exports.getRoutinesByUserId = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const routines = await Routine.getByUserId(userId);
+    return res.status(200).json(routines);
+  } catch (e) {
+    next(e);
+  }
+};
+
 exports.createRoutine = async (req, res, next) => {
   try {
     const { userId, workoutId, cron, timezone } = req.body;

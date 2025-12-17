@@ -76,6 +76,40 @@ router.get("/:id", authorizeOwnResource(), ctrl.getRoutineById);
 
 /**
  * @openapi
+ * /api/routines/user/{userId}:
+ *   get:
+ *     summary: Récupérer toutes les routines d'un utilisateur
+ *     description: Retourne la liste des routines personnelles d'un utilisateur spécifique
+ *     tags: [Routines]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: userId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: number
+ *         description: ID de l'utilisateur
+ *     responses:
+ *       200:
+ *         description: Liste des routines de l'utilisateur récupérée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Routine'
+ *       500:
+ *         description: Erreur serveur
+ */
+router.get(
+  "/user/:userId",
+  authorizeOwnResource("userId"),
+  ctrl.getRoutinesByUserId
+);
+
+/**
+ * @openapi
  * /api/routines:
  *   post:
  *     summary: Créer une nouvelle routine
