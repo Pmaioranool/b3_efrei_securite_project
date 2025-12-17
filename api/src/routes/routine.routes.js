@@ -68,7 +68,7 @@ router.get("/", authorizeRoles("admin"), ctrl.getRoutine);
  *       500:
  *         description: Erreur serveur
  */
-router.get("/:id", ctrl.getRoutineById);
+router.get("/:id", authorizeOwnResource(), ctrl.getRoutineById);
 
 /**
  * @openapi
@@ -95,7 +95,12 @@ router.get("/:id", ctrl.getRoutineById);
  *       500:
  *         description: Erreur serveur
  */
-router.post("/", validateRoutineCreation, ctrl.createRoutine);
+router.post(
+  "/",
+  validateRoutineCreation,
+  authorizeOwnResource(),
+  ctrl.createRoutine
+);
 
 /**
  * @openapi
@@ -133,8 +138,8 @@ router.post("/", validateRoutineCreation, ctrl.createRoutine);
  */
 router.put(
   "/:id",
-  // validateRoutineId,
-  // validateRoutineUpdate,
+  validateRoutineCreation,
+  authorizeOwnResource(),
   ctrl.updateRoutine
 );
 
@@ -168,6 +173,6 @@ router.put(
  *       500:
  *         description: Erreur serveur
  */
-router.delete("/:id", ctrl.deleteRoutine);
+router.delete("/:id", authorizeOwnResource(), ctrl.deleteRoutine);
 
 module.exports = router;
