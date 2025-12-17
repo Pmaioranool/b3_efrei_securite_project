@@ -27,6 +27,8 @@ const {
  *     summary: Récupérer tous les utilisateurs
  *     description: Retourne la liste de tous les utilisateurs
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Liste des utilisateurs récupérée avec succès
@@ -48,6 +50,8 @@ router.get("/", validateUserList, authorizeRoles("ADMIN"), ctrl.getUser);
  *     summary: Récupérer un utilisateur par ID
  *     description: Retourne les détails d'un utilisateur spécifique
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -81,6 +85,8 @@ router.get(
  *     summary: Créer un nouvel utilisateur
  *     description: Crée un nouveau compte utilisateur
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -100,6 +106,40 @@ router.get(
  *         description: Erreur serveur
  */
 
+/**
+ * @openapi
+ * /api/users/{id}:
+ *   put:
+ *     summary: Mettre à jour un utilisateur
+ *     description: Met à jour les informations d'un utilisateur existant
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de l'utilisateur
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UserUpdate'
+ *     responses:
+ *       200:
+ *         description: Utilisateur mis à jour avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       404:
+ *         description: Utilisateur non trouvé
+ *       500:
+ *         description: Erreur serveur
+ */
 router.put("/:id", validateUserUpdate, authorizeOwnResource(), ctrl.updateUser);
 
 /**
@@ -109,6 +149,8 @@ router.put("/:id", validateUserUpdate, authorizeOwnResource(), ctrl.updateUser);
  *     summary: Mettre à jour le mot de passe
  *     description: Met à jour le mot de passe d'un utilisateur
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -156,6 +198,8 @@ router.put(
  *     summary: Mettre à jour la dernière connexion
  *     description: Met à jour la date de dernière connexion d'un utilisateur
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -202,6 +246,8 @@ router.put(
  *     summary: Incrémenter les workouts complétés
  *     description: Incrémente le compteur de workouts complétés par l'utilisateur
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path

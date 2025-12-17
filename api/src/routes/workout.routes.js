@@ -19,6 +19,8 @@ const {
  *     summary: Récupérer tous les workouts
  *     description: Retourne la liste des workouts avec les exercices associés
  *     tags: [Workouts]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Liste des workouts récupérée avec succès
@@ -40,6 +42,8 @@ router.get("/", authorizeRoles("ADMIN"), ctrl.getWorkout);
  *     summary: Récupérer tous les templates de workouts
  *     description: Retourne la liste des workouts templates partageables entre utilisateurs
  *     tags: [Workouts]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Liste des templates récupérée avec succès
@@ -55,6 +59,8 @@ router.get("/templates", authorizeOwnResource(), ctrl.getTemplates);
  *     summary: Récupérer un workout par ID
  *     description: Retourne les détails d'un workout spécifique avec ses exercices
  *     tags: [Workouts]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -83,6 +89,8 @@ router.get("/:id", authorizeOwnResource(), ctrl.getWorkoutById);
  *     summary: Créer un nouveau workout
  *     description: Crée un nouveau programme d'entraînement
  *     tags: [Workouts]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -127,6 +135,8 @@ router.post("/", authorizeOwnResource(), ctrl.createWorkout);
  *     summary: Mettre à jour un workout
  *     description: Met à jour les informations d'un workout existant
  *     tags: [Workouts]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path

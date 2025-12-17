@@ -28,6 +28,8 @@ router.use(authenticateToken);
  *     summary: Récupérer toutes les routines
  *     description: Retourne la liste de toutes les routines planifiées avec leurs workouts associés
  *     tags: [Routines]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Liste des routines récupérée avec succès
@@ -49,6 +51,8 @@ router.get("/", authorizeRoles("admin"), ctrl.getRoutine);
  *     summary: Récupérer une routine par ID
  *     description: Retourne les détails d'une routine spécifique avec son workout associé
  *     tags: [Routines]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -77,6 +81,8 @@ router.get("/:id", authorizeOwnResource(), ctrl.getRoutineById);
  *     summary: Créer une nouvelle routine
  *     description: Crée une nouvelle routine planifiée avec une expression CRON
  *     tags: [Routines]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -109,6 +115,8 @@ router.post(
  *     summary: Mettre à jour une routine
  *     description: Met à jour les informations d'une routine existante
  *     tags: [Routines]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -150,6 +158,8 @@ router.put(
  *     summary: Supprimer une routine
  *     description: Supprime une routine spécifique de la base de données
  *     tags: [Routines]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
