@@ -23,7 +23,7 @@ exports.validateUserIdParam = [
 // PUT /api/users/:id
 exports.validateUserUpdate = [
   param("id").isInt({ min: 1 }).withMessage("id doit être un entier positif"),
-  body("name")
+  body("speudonym")
     .optional()
     .trim()
     .isLength({ min: 2 })

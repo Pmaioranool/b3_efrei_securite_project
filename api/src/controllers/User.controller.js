@@ -22,11 +22,11 @@ exports.getUserById = async (req, res, next) => {
 
 exports.updateUser = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { pseudonym, email, birthdate } = req.body;
     const updatedUser = await User.update(req.params.id, {
-      name,
+      pseudonym,
       email,
-      password,
+      birthdate,
     });
     return res.status(200).json(updatedUser);
   } catch (e) {

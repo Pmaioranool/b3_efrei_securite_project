@@ -3,14 +3,13 @@ const { handleValidationErrors } = require("../validation.middleware");
 
 // Validation pour /auth/register et /auth/register/admin
 exports.validateRegister = [
-  body("firstname")
+  body("pseudonym")
     .trim()
     .isLength({ min: 2 })
-    .withMessage("Le prénom doit contenir au moins 2 caractères"),
-  body("lastname")
-    .trim()
-    .isLength({ min: 2 })
-    .withMessage("Le nom doit contenir au moins 2 caractères"),
+    .withMessage("Le pseudonyme doit contenir au moins 2 caractères"),
+  body("birthdate")
+    .isISO8601()
+    .withMessage("La date de naissance doit être au format ISO8601"),
   body("email").trim().isEmail().withMessage("Email invalide"),
   body("password")
     .matches(
