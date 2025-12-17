@@ -104,8 +104,6 @@ const components = {
       type: "object",
       properties: {
         id: { type: "integer", description: "ID unique de l'utilisateur" },
-        firstname: { type: "string", description: "Prénom" },
-        lastname: { type: "string", description: "Nom" },
         pseudonym: { type: "string", description: "Pseudonyme unique" },
         birthdate: {
           type: "string",
@@ -122,10 +120,6 @@ const components = {
           enum: ["USER", "ADMIN", "COACH"],
           description: "Rôle de l'utilisateur",
         },
-        workouts_completed: {
-          type: "integer",
-          description: "Nombre de workouts complétés",
-        },
         last_login: {
           type: "string",
           format: "date-time",
@@ -137,17 +131,8 @@ const components = {
     },
     UserInput: {
       type: "object",
-      required: [
-        "firstname",
-        "lastname",
-        "pseudonym",
-        "birthdate",
-        "email",
-        "password",
-      ],
+      required: ["pseudonym", "birthdate", "email", "password"],
       properties: {
-        firstname: { type: "string", example: "John" },
-        lastname: { type: "string", example: "Doe" },
         pseudonym: { type: "string", example: "johndoe" },
         birthdate: { type: "string", format: "date", example: "1990-01-01" },
         email: {
@@ -172,20 +157,12 @@ const components = {
     UserUpdate: {
       type: "object",
       properties: {
-        firstname: { type: "string", example: "John" },
-        lastname: { type: "string", example: "Doe" },
         pseudonym: { type: "string", example: "johndoe" },
         birthdate: { type: "string", format: "date", example: "1990-01-01" },
         email: {
           type: "string",
           format: "email",
           example: "john.updated@example.com",
-        },
-        password: {
-          type: "string",
-          format: "password",
-          minLength: 6,
-          example: "newsecurepassword123",
         },
       },
     },

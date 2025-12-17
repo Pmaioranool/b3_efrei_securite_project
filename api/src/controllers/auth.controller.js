@@ -5,8 +5,6 @@ class AuthController {
   async register(req, res, next) {
     try {
       const {
-        firstname,
-        lastname,
         pseudonym,
         email,
         password,
@@ -16,18 +14,11 @@ class AuthController {
       let role = inputRole || "USER";
       role === "ADMIN" && (role = "USER"); // Prevent users from self-assigning admin role
 
-      if (
-        !firstname ||
-        !lastname ||
-        !email ||
-        !password ||
-        !pseudonym ||
-        !birthdate
-      ) {
+      if (!email || !password || !pseudonym || !birthdate) {
         return res.status(400).json({
           error: "Données manquantes",
           message:
-            "Le nom, prénom, pseudonyme, email, date de naissance et mot de passe sont requis",
+            "Le pseudonyme, email, date de naissance et mot de passe sont requis",
         });
       }
 
@@ -54,8 +45,6 @@ class AuthController {
       }
 
       const newUser = await User.create({
-        firstname,
-        lastname,
         pseudonym,
         birthdate,
         email,
@@ -75,8 +64,6 @@ class AuthController {
         message: "Utilisateur créé avec succès",
         user: {
           id: newUser.id,
-          firstname: newUser.firstname,
-          lastname: newUser.lastname,
           pseudonym: newUser.pseudonym,
           birthdate: newUser.birthdate,
           email: newUser.email,
@@ -94,17 +81,9 @@ class AuthController {
 
   async registerAdmin(req, res, next) {
     try {
-      const { firstname, lastname, pseudonym, email, password, birthdate } =
-        req.body;
+      const { pseudonym, email, password, birthdate } = req.body;
       const role = "ADMIN";
-      if (
-        !firstname ||
-        !lastname ||
-        !email ||
-        !password ||
-        !pseudonym ||
-        !birthdate
-      ) {
+      if (!email || !password || !pseudonym || !birthdate) {
         return res.status(400).json({
           error: "Données manquantes",
           message:
@@ -131,8 +110,6 @@ class AuthController {
         });
       }
       const newUser = await User.create({
-        firstname,
-        lastname,
         pseudonym,
         birthdate,
         email,
@@ -143,8 +120,6 @@ class AuthController {
         message: "Administrateur créé avec succès",
         user: {
           id: newUser.id,
-          firstname: newUser.firstname,
-          lastname: newUser.lastname,
           pseudonym: newUser.pseudonym,
           birthdate: newUser.birthdate,
           email: newUser.email,
@@ -211,7 +186,7 @@ class AuthController {
         message: "Connexion réussie",
         user: {
           id: user.id,
-          name: user.name,
+          pseudonym: user.pseudonym,
           email: user.email,
           last_login: user.last_login,
           role: user.role,
