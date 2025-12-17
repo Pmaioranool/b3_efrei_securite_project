@@ -97,7 +97,7 @@ router.get("/test-db", authorizeRoles("ADMIN"), async (req, res) => {
 router.get("/db/init", authorizeRoles("ADMIN"), async (req, res) => {
   try {
     const sqlFile = fs.readFileSync(
-      path.join(__dirname, "../sql/init.sql"),
+      path.join(__dirname, "../../sql/init.sql"),
       "utf8"
     );
     await pool.query(sqlFile);
@@ -164,13 +164,13 @@ router.get("/db/reset", authorizeRoles("ADMIN"), async (req, res) => {
       });
     }
     const sqlResetFile = fs.readFileSync(
-      path.join(__dirname, "../sql/reset.sql"),
+      path.join(__dirname, "../../sql/reset.sql"),
       "utf8"
     );
     await pool.query(sqlResetFile);
 
     const sqlInitFile = fs.readFileSync(
-      path.join(__dirname, "../sql/init.sql"),
+      path.join(__dirname, "../../sql/init.sql"),
       "utf8"
     );
     await pool.query(sqlInitFile);
