@@ -16,8 +16,6 @@ const { authorizeRoles } = require("../middlewares/auth.middleware");
  *     summary: Récupérer tous les exercices
  *     description: Retourne la liste des exercices avec possibilité de filtrage
  *     tags: [Exercises]
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - name: title
  *         in: query
@@ -70,8 +68,6 @@ router.get("/", ctrl.getExercise);
  *     summary: Récupérer un exercice par ID
  *     description: Retourne les détails d'un exercice spécifique
  *     tags: [Exercises]
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path

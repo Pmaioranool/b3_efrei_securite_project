@@ -1,5 +1,9 @@
 const router = require("express").Router();
 const ctrl = require("../controllers/Workout.controller");
+const {
+  authorizeOwnResource,
+  authorizeRoles,
+} = require("../middlewares/auth.middleware");
 
 /**
  * @openapi
@@ -15,6 +19,8 @@ const ctrl = require("../controllers/Workout.controller");
  *     summary: Récupérer tous les workouts
  *     description: Retourne la liste des workouts avec les exercices associés
  *     tags: [Workouts]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Liste des workouts récupérée avec succès
@@ -27,7 +33,7 @@ const ctrl = require("../controllers/Workout.controller");
  *       500:
  *         description: Erreur serveur
  */
-router.get("/", ctrl.getWorkout);
+router.get("/", authorizeRoles("ADMIN"), ctrl.getWorkout);
 
 /**
  * @openapi
@@ -36,13 +42,15 @@ router.get("/", ctrl.getWorkout);
  *     summary: Récupérer tous les templates de workouts
  *     description: Retourne la liste des workouts templates partageables entre utilisateurs
  *     tags: [Workouts]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Liste des templates récupérée avec succès
  *       500:
  *         description: Erreur serveur
  */
-router.get("/templates", ctrl.getTemplates);
+router.get("/templates", authorizeOwnResource(), ctrl.getTemplates);
 
 /**
  * @openapi
@@ -51,6 +59,8 @@ router.get("/templates", ctrl.getTemplates);
  *     summary: Récupérer un workout par ID
  *     description: Retourne les détails d'un workout spécifique avec ses exercices
  *     tags: [Workouts]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -70,7 +80,7 @@ router.get("/templates", ctrl.getTemplates);
  *       500:
  *         description: Erreur serveur
  */
-router.get("/:id", ctrl.getWorkoutById);
+router.get("/:id", authorizeOwnResource(), ctrl.getWorkoutById);
 
 /**
  * @openapi
@@ -79,6 +89,8 @@ router.get("/:id", ctrl.getWorkoutById);
  *     summary: Créer un nouveau workout
  *     description: Crée un nouveau programme d'entraînement
  *     tags: [Workouts]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -114,7 +126,7 @@ router.get("/:id", ctrl.getWorkoutById);
  *       500:
  *         description: Erreur serveur
  */
-router.post("/", ctrl.createWorkout);
+router.post("/", authorizeOwnResource(), ctrl.createWorkout);
 
 /**
  * @openapi
@@ -123,6 +135,8 @@ router.post("/", ctrl.createWorkout);
  *     summary: Mettre à jour un workout
  *     description: Met à jour les informations d'un workout existant
  *     tags: [Workouts]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -148,7 +162,7 @@ router.post("/", ctrl.createWorkout);
  *       500:
  *         description: Erreur serveur
  */
-router.put("/:id", ctrl.updateWorkout);
+router.put("/:id", authorizeOwnResource(), ctrl.updateWorkout);
 
 /**
  * @openapi
@@ -221,6 +235,6 @@ router.post("/templates/:templateId/clone", ctrl.cloneTemplate);
  *       500:
  *         description: Erreur serveur
  */
-router.delete("/:id", ctrl.deleteWorkout);
+router.delete("/:id", authorizeOwnResource(), ctrl.deleteWorkout);
 
 module.exports = router;

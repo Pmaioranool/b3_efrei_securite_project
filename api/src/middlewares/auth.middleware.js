@@ -101,12 +101,12 @@ exports.authorizeOwnResource = (paramName = "id") => {
       );
       const decoded = JWTService.verifyAccessToken(token);
 
-      const userRole = (decoded.role || "").toLowerCase();
+      const userRole = decoded.role || "";
       const requestedResourceId = req.params[paramName];
       const authenticatedUserId = decoded.userId;
 
       // Admin a accès à toutes les ressources
-      if (userRole === "admin") {
+      if (userRole === "ADMIN") {
         return next();
       }
 

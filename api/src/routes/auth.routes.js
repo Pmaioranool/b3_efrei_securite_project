@@ -1,6 +1,10 @@
 const router = require("express").Router();
 const AuthController = require("../controllers/auth.controller");
-const { authenticateToken } = require("../middlewares/auth.middleware");
+const {
+  authenticateToken,
+  authorizeRoles,
+  authorizeOwnResource,
+} = require("../middlewares/auth.middleware");
 const {
   validateRegister,
   validateLogin,
@@ -56,7 +60,12 @@ router.post("/register", validateRegister, AuthController.register);
  *       409:
  *         description: Utilisateur déjà existant
  */
-router.post("/register/admin", validateRegister, AuthController.registerAdmin);
+router.post(
+  "/register/admin",
+  validateRegister,
+  authorizeRoles("ADMIN"),
+  AuthController.registerAdmin
+);
 
 /**
  * @openapi
@@ -130,7 +139,12 @@ router.post("/refresh", validateRefresh, AuthController.refresh);
  *       401:
  *         description: Non authentifié
  */
-router.get("/profile", authenticateToken, AuthController.getProfile);
+router.get(
+  "/profile",
+  authenticateToken,
+  authorizeOwnResource(),
+  AuthController.getProfile
+);
 
 /**
  * @openapi

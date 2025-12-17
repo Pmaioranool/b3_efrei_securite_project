@@ -1,6 +1,10 @@
 const router = require("express").Router();
 const ctrl = require("../controllers/User.controller");
 const {
+  authorizeRoles,
+  authorizeOwnResource,
+} = require("../middlewares/auth.middleware");
+const {
   validateUserList,
   validateUserIdParam,
   validateUserUpdate,
@@ -23,6 +27,8 @@ const {
  *     summary: Récupérer tous les utilisateurs
  *     description: Retourne la liste de tous les utilisateurs
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Liste des utilisateurs récupérée avec succès
@@ -35,7 +41,7 @@ const {
  *       500:
  *         description: Erreur serveur
  */
-router.get("/", validateUserList, ctrl.getUser);
+router.get("/", validateUserList, authorizeRoles("ADMIN"), ctrl.getUser);
 
 /**
  * @openapi
@@ -44,6 +50,8 @@ router.get("/", validateUserList, ctrl.getUser);
  *     summary: Récupérer un utilisateur par ID
  *     description: Retourne les détails d'un utilisateur spécifique
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -63,7 +71,12 @@ router.get("/", validateUserList, ctrl.getUser);
  *       500:
  *         description: Erreur serveur
  */
-router.get("/:id", validateUserIdParam, ctrl.getUserById);
+router.get(
+  "/:id",
+  validateUserIdParam,
+  authorizeOwnResource(),
+  ctrl.getUserById
+);
 
 /**
  * @openapi
@@ -72,6 +85,8 @@ router.get("/:id", validateUserIdParam, ctrl.getUserById);
  *     summary: Créer un nouvel utilisateur
  *     description: Crée un nouveau compte utilisateur
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -91,7 +106,41 @@ router.get("/:id", validateUserIdParam, ctrl.getUserById);
  *         description: Erreur serveur
  */
 
-router.put("/:id", validateUserUpdate, ctrl.updateUser);
+/**
+ * @openapi
+ * /api/users/{id}:
+ *   put:
+ *     summary: Mettre à jour un utilisateur
+ *     description: Met à jour les informations d'un utilisateur existant
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de l'utilisateur
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UserUpdate'
+ *     responses:
+ *       200:
+ *         description: Utilisateur mis à jour avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       404:
+ *         description: Utilisateur non trouvé
+ *       500:
+ *         description: Erreur serveur
+ */
+router.put("/:id", validateUserUpdate, authorizeOwnResource(), ctrl.updateUser);
 
 /**
  * @openapi
@@ -100,6 +149,8 @@ router.put("/:id", validateUserUpdate, ctrl.updateUser);
  *     summary: Mettre à jour le mot de passe
  *     description: Met à jour le mot de passe d'un utilisateur
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -133,7 +184,12 @@ router.put("/:id", validateUserUpdate, ctrl.updateUser);
  *       500:
  *         description: Erreur serveur
  */
-router.put("/:id/password", validateUserPassword, ctrl.updateUserPassword);
+router.put(
+  "/:id/password",
+  validateUserPassword,
+  authorizeOwnResource(),
+  ctrl.updateUserPassword
+);
 
 /**
  * @openapi
@@ -142,6 +198,8 @@ router.put("/:id/password", validateUserPassword, ctrl.updateUserPassword);
  *     summary: Mettre à jour la dernière connexion
  *     description: Met à jour la date de dernière connexion d'un utilisateur
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -174,7 +232,12 @@ router.put("/:id/password", validateUserPassword, ctrl.updateUserPassword);
  *       500:
  *         description: Erreur serveur
  */
-router.put("/:id/last-login", validateUserLastLogin, ctrl.updateUserLastLogin);
+router.put(
+  "/:id/last-login",
+  validateUserLastLogin,
+  authorizeOwnResource(),
+  ctrl.updateUserLastLogin
+);
 
 /**
  * @openapi
@@ -183,6 +246,8 @@ router.put("/:id/last-login", validateUserLastLogin, ctrl.updateUserLastLogin);
  *     summary: Incrémenter les workouts complétés
  *     description: Incrémente le compteur de workouts complétés par l'utilisateur
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -220,6 +285,7 @@ router.put("/:id/last-login", validateUserLastLogin, ctrl.updateUserLastLogin);
 router.put(
   "/:id/workouts-completed",
   validateUserWorkoutIncrement,
+  authorizeOwnResource(),
   ctrl.incrementUserWorkoutsCompleted
 );
 
@@ -253,6 +319,11 @@ router.put(
  *       500:
  *         description: Erreur serveur
  */
-router.delete("/:id", validateUserIdParam, ctrl.deleteUser);
+router.delete(
+  "/:id",
+  validateUserIdParam,
+  authorizeOwnResource(),
+  ctrl.deleteUser
+);
 
 module.exports = router;

@@ -28,6 +28,8 @@ router.use(authenticateToken);
  *     summary: Récupérer toutes les routines
  *     description: Retourne la liste de toutes les routines planifiées avec leurs workouts associés
  *     tags: [Routines]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Liste des routines récupérée avec succès
@@ -49,6 +51,8 @@ router.get("/", authorizeRoles("admin"), ctrl.getRoutine);
  *     summary: Récupérer une routine par ID
  *     description: Retourne les détails d'une routine spécifique avec son workout associé
  *     tags: [Routines]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -68,7 +72,7 @@ router.get("/", authorizeRoles("admin"), ctrl.getRoutine);
  *       500:
  *         description: Erreur serveur
  */
-router.get("/:id", ctrl.getRoutineById);
+router.get("/:id", authorizeOwnResource(), ctrl.getRoutineById);
 
 /**
  * @openapi
@@ -77,6 +81,8 @@ router.get("/:id", ctrl.getRoutineById);
  *     summary: Créer une nouvelle routine
  *     description: Crée une nouvelle routine planifiée avec une expression CRON
  *     tags: [Routines]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -95,7 +101,12 @@ router.get("/:id", ctrl.getRoutineById);
  *       500:
  *         description: Erreur serveur
  */
-router.post("/", validateRoutineCreation, ctrl.createRoutine);
+router.post(
+  "/",
+  validateRoutineCreation,
+  authorizeOwnResource(),
+  ctrl.createRoutine
+);
 
 /**
  * @openapi
@@ -104,6 +115,8 @@ router.post("/", validateRoutineCreation, ctrl.createRoutine);
  *     summary: Mettre à jour une routine
  *     description: Met à jour les informations d'une routine existante
  *     tags: [Routines]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -133,8 +146,8 @@ router.post("/", validateRoutineCreation, ctrl.createRoutine);
  */
 router.put(
   "/:id",
-  // validateRoutineId,
-  // validateRoutineUpdate,
+  validateRoutineCreation,
+  authorizeOwnResource(),
   ctrl.updateRoutine
 );
 
@@ -145,6 +158,8 @@ router.put(
  *     summary: Supprimer une routine
  *     description: Supprime une routine spécifique de la base de données
  *     tags: [Routines]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -168,6 +183,6 @@ router.put(
  *       500:
  *         description: Erreur serveur
  */
-router.delete("/:id", ctrl.deleteRoutine);
+router.delete("/:id", authorizeOwnResource(), ctrl.deleteRoutine);
 
 module.exports = router;
