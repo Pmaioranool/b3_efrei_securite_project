@@ -140,3 +140,13 @@ exports.cloneTemplate = async (req, res, next) => {
     next(e);
   }
 };
+
+exports.getWorkoutsByUserId = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const workouts = await Workout.getByUserId(userId);
+    return res.status(200).json(workouts);
+  } catch (e) {
+    next(e);
+  }
+};

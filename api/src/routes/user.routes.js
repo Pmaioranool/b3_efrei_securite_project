@@ -296,6 +296,8 @@ router.put(
  *     summary: Supprimer un utilisateur
  *     description: Supprime un utilisateur de la base de données
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path

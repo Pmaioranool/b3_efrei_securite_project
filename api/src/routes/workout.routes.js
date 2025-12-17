@@ -43,14 +43,13 @@ router.get("/", authorizeRoles("ADMIN"), ctrl.getWorkout);
  *     description: Retourne la liste des workouts templates partageables entre utilisateurs
  *     tags: [Workouts]
  *     security:
- *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Liste des templates récupérée avec succès
  *       500:
  *         description: Erreur serveur
  */
-router.get("/templates", authorizeOwnResource(), ctrl.getTemplates);
+router.get("/templates", ctrl.getTemplates);
 
 /**
  * @openapi
@@ -81,6 +80,40 @@ router.get("/templates", authorizeOwnResource(), ctrl.getTemplates);
  *         description: Erreur serveur
  */
 router.get("/:id", authorizeOwnResource(), ctrl.getWorkoutById);
+
+/**
+ * @openapi
+ * /api/workouts/user/{userId}:
+ *   get:
+ *     summary: Récupérer tous les workouts d'un utilisateur
+ *     description: Retourne la liste des workouts personnels d'un utilisateur spécifique
+ *     tags: [Workouts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: userId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: number
+ *         description: ID de l'utilisateur
+ *     responses:
+ *       200:
+ *         description: Liste des workouts de l'utilisateur récupérée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Workout'
+ *       500:
+ *         description: Erreur serveur
+ */
+router.get(
+  "/user/:userId",
+  authorizeOwnResource("userId"),
+  ctrl.getWorkoutsByUserId
+);
 
 /**
  * @openapi
@@ -212,6 +245,8 @@ router.post("/templates/:templateId/clone", ctrl.cloneTemplate);
  *     summary: Supprimer un workout
  *     description: Supprime un workout de la base de données
  *     tags: [Workouts]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path

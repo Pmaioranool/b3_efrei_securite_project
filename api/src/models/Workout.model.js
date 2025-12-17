@@ -58,6 +58,12 @@ class Workout {
       .exec();
   }
 
+  static async getByUserId(userId) {
+    return await WorkoutModel.find({ userId })
+      .populate("exercises.exercise")
+      .exec();
+  }
+
   static async getById(id) {
     return await WorkoutModel.findById(id)
       .populate("exercises.exercise")
