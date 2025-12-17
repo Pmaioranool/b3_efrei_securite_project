@@ -5,7 +5,7 @@ const JWTService = require("../utils/jwt");
 class User {
   static async getAll(page = 1, pagesize = 10) {
     const res = await pool.query(
-      "SELECT id, firstname, lastname, pseudonym, email, roles, birthdate, last_login, created_at, updated_at FROM users ORDER BY id"
+      "SELECT id, firstname, lastname, pseudonym, email, role, birthdate, last_login, created_at, updated_at FROM users ORDER BY id"
     );
     console.log(page, pagesize);
     const start = (page - 1) * pagesize;
@@ -16,7 +16,7 @@ class User {
 
   static async getById(id) {
     const res = await pool.query(
-      "SELECT id, firstname, lastname, pseudonym, email, roles, birthdate, last_login, created_at, updated_at FROM users WHERE id = $1",
+      "SELECT id, firstname, lastname, pseudonym, email, role, birthdate, last_login, created_at, updated_at FROM users WHERE id = $1",
       [id]
     );
     return res.rows[0] || null;
@@ -25,6 +25,13 @@ class User {
   static async getByEmail(email) {
     const res = await pool.query("SELECT * FROM users WHERE email = $1", [
       email,
+    ]);
+    return res.rows[0] || null;
+  }
+
+  static async getByPseudonym(pseudonym) {
+    const res = await pool.query("SELECT * FROM users WHERE pseudonym = $1", [
+      pseudonym,
     ]);
     return res.rows[0] || null;
   }
@@ -38,11 +45,12 @@ class User {
     email,
     password,
     birthdate,
+    role = "user",
   }) {
     const hashedPassword = await JWTService.hashPassword(password);
     const res = await pool.query(
-      "INSERT INTO users (firstname,lastname, pseudonym, email, password, birthdate) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, firstname, email,  workouts_completed, last_login, created_at, updated_at",
-      [firstname, lastname, pseudonym, email, hashedPassword, birthdate]
+      "INSERT INTO users (firstname,lastname, pseudonym, email, password, birthdate, role) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, firstname, lastname, pseudonym, email, birthdate, last_login, created_at, updated_at",
+      [firstname, lastname, pseudonym, email, hashedPassword, birthdate, role]
     );
     return res.rows[0];
   }
