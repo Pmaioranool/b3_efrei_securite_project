@@ -18,35 +18,14 @@ const {
  * @openapi
  * /api/auth/register:
  *   post:
- *     summary: Inscription d'un nouvel utilisateur
+ *     summary: Inscription d'un nouvel utilisateur (rôle USER par défaut)
  *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
- *             properties:
- *               name:
- *                 type: string
- *                 example: "John Doe"
- *               email:
- *                 type: string
- *                 format: email
- *                 example: "john@example.com"
- *               password:
- *                 type: string
- *                 format: password
- *                 minLength: 6
- *                 example: "securepassword123"
- *               role:
- *                 type: string
- *                 enum: [user, admin]
- *                 default: user
+ *             $ref: '#/components/schemas/UserInput'
  *     responses:
  *       201:
  *         description: Utilisateur créé avec succès
@@ -61,19 +40,21 @@ router.post("/register", validateRegister, AuthController.register);
  * @openapi
  * /api/auth/register/admin:
  *   post:
- *    summary: Inscription d'un nouvel administrateur
- *   tags: [Authentication]
- *   requestBody:
- *    required: true
- *   content:
- *    application/json:
- *     schema:
- *      type: object
- *     required:
- *      - name
- *     - email
- *    - password
- *    properties:
+ *     summary: Inscription d'un nouvel administrateur (rôle ADMIN forcé)
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UserInput'
+ *     responses:
+ *       201:
+ *         description: Administrateur créé avec succès
+ *       400:
+ *         description: Données invalides
+ *       409:
+ *         description: Utilisateur déjà existant
  */
 router.post("/register/admin", validateRegister, AuthController.registerAdmin);
 
