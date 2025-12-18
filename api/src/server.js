@@ -68,6 +68,8 @@ const authRoutes = require("./routes/auth.routes");
 app.use("/api/auth", authRoutes);
 const routineRoutes = require("./routes/routine.routes");
 app.use("/api/routines", routineRoutes);
+const rgpdRoutes = require("./routes/rgpd.routes");
+app.use("/api/rgpd", rgpdRoutes);
 
 // Health
 app.get("/api/status", (req, res) => {
