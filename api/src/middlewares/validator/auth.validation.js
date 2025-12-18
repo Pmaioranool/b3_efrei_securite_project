@@ -7,9 +7,6 @@ exports.validateRegister = [
     .trim()
     .isLength({ min: 2 })
     .withMessage("Le pseudonyme doit contenir au moins 2 caractères"),
-  body("birthdate")
-    .isISO8601()
-    .withMessage("La date de naissance doit être au format ISO8601"),
   body("email").trim().isEmail().withMessage("Email invalide"),
   body("password")
     .matches(

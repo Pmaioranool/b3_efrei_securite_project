@@ -1,24 +1,60 @@
 const User = require("../models/User.model");
 const JWTService = require("../utils/jwt");
 
+const isRefreshCookieEnabled = process.env.USE_REFRESH_COOKIE === "true";
+const cookieBaseOptions = {
+  httpOnly: true,
+  sameSite: "strict",
+  path: "/api/auth/refresh",
+};
+
+const setRefreshCookie = (res, token) => {
+  if (!isRefreshCookieEnabled) return;
+  res.cookie("refresh_token", token, {
+    ...cookieBaseOptions,
+    secure: process.env.NODE_ENV === "PRODUCTION",
+    maxAge: 7 * 24 * 60 * 60 * 1000, //  7 days
+  });
+};
+
+const clearRefreshCookie = (res) => {
+  if (!isRefreshCookieEnabled) return;
+  res.clearCookie("refresh_token", {
+    ...cookieBaseOptions,
+    secure: process.env.NODE_ENV === "PRODUCTION",
+  });
+};
+
+const extractRefreshToken = (req) => {
+  if (req.body && req.body.refreshToken) {
+    return req.body.refreshToken;
+  }
+  if (!isRefreshCookieEnabled) return null;
+
+  const cookieHeader = req.headers?.cookie;
+  if (!cookieHeader) return null;
+
+  const cookies = cookieHeader.split(";").reduce((acc, part) => {
+    const [key, ...val] = part.trim().split("=");
+    if (!key) return acc;
+    acc[decodeURIComponent(key)] = decodeURIComponent(val.join("="));
+    return acc;
+  }, {});
+
+  return cookies["refresh_token"] || null;
+};
+
 class AuthController {
   async register(req, res, next) {
     try {
-      const {
-        pseudonym,
-        email,
-        password,
-        birthdate,
-        role: inputRole,
-      } = req.body;
+      const { pseudonym, email, password, role: inputRole } = req.body;
       let role = inputRole || "USER";
       role === "ADMIN" && (role = "USER"); // Prevent users from self-assigning admin role
 
-      if (!email || !password || !pseudonym || !birthdate) {
+      if (!email || !password || !pseudonym) {
         return res.status(400).json({
           error: "Données manquantes",
-          message:
-            "Le pseudonyme, email, date de naissance et mot de passe sont requis",
+          message: "Le pseudonyme, email et mot de passe sont requis",
         });
       }
 
@@ -46,7 +82,6 @@ class AuthController {
 
       const newUser = await User.create({
         pseudonym,
-        birthdate,
         email,
         password,
       });
@@ -55,17 +90,19 @@ class AuthController {
         userId: newUser.id,
         email: newUser.email,
         role: newUser.role,
+        tokenVersion: newUser.refresh_token_version,
       };
 
       const accessToken = JWTService.generateAccessToken(userPayload);
       const refreshToken = JWTService.generateRefreshToken(userPayload);
+
+      setRefreshCookie(res, refreshToken);
 
       res.status(201).json({
         message: "Utilisateur créé avec succès",
         user: {
           id: newUser.id,
           pseudonym: newUser.pseudonym,
-          birthdate: newUser.birthdate,
           email: newUser.email,
           role: role,
         },
@@ -81,13 +118,13 @@ class AuthController {
 
   async registerAdmin(req, res, next) {
     try {
-      const { pseudonym, email, password, birthdate } = req.body;
+      const { pseudonym, email, password } = req.body;
       const role = "ADMIN";
-      if (!email || !password || !pseudonym || !birthdate) {
+      if (!email || !password || !pseudonym) {
         return res.status(400).json({
           error: "Données manquantes",
           message:
-            "Le nom, prénom, pseudonyme, email, date de naissance et mot de passe sont requis",
+            "Le nom, prénom, pseudonyme, email et mot de passe sont requis",
         });
       }
       if (password.length < 6) {
@@ -111,7 +148,6 @@ class AuthController {
       }
       const newUser = await User.create({
         pseudonym,
-        birthdate,
         email,
         password,
         role,
@@ -121,7 +157,6 @@ class AuthController {
         user: {
           id: newUser.id,
           pseudonym: newUser.pseudonym,
-          birthdate: newUser.birthdate,
           email: newUser.email,
           role: role,
         },
@@ -171,16 +206,24 @@ class AuthController {
         }
       }
 
+      const rotatedUser = await User.bumpRefreshTokenVersion(user.id);
+
       const userPayload = {
         userId: user.id,
         email: user.email,
         role: user.role,
+        tokenVersion: rotatedUser.refresh_token_version,
       };
 
       const accessToken = JWTService.generateAccessToken(userPayload);
       const refreshToken = JWTService.generateRefreshToken(userPayload);
 
-      await User.updateLastLogin(user.id, new Date().toISOString());
+      setRefreshCookie(res, refreshToken);
+
+      const loginUpdated = await User.updateLastLogin(
+        user.id,
+        new Date().toISOString()
+      );
 
       res.json({
         message: "Connexion réussie",
@@ -188,7 +231,7 @@ class AuthController {
           id: user.id,
           pseudonym: user.pseudonym,
           email: user.email,
-          last_login: user.last_login,
+          last_login: loginUpdated ? loginUpdated.last_login : user.last_login,
           role: user.role,
         },
         tokens: {
@@ -203,23 +246,64 @@ class AuthController {
 
   async refresh(req, res, next) {
     try {
-      const { refreshToken } = req.body;
+      const refreshToken = extractRefreshToken(req);
 
       if (!refreshToken) {
         return res.status(400).json({
           error: "Refresh token requis",
+          message: "Fournir le token en body ou via cookie sécurisé",
         });
       }
 
-      const tokens = JWTService.refreshTokens(refreshToken);
+      const decoded = JWTService.verifyRefreshToken(refreshToken);
+      const user = await User.getAuthState(decoded.userId);
+
+      if (!user) {
+        return res.status(401).json({
+          error: "Utilisateur non trouvé ou inactif",
+        });
+      }
+
+      if (decoded.tokenVersion === undefined) {
+        return res.status(401).json({
+          error: "Refresh token invalide",
+          message: "Version du token manquante",
+        });
+      }
+
+      if (decoded.tokenVersion !== user.refresh_token_version) {
+        return res.status(401).json({
+          error: "Refresh token invalide",
+          message: "Version du token expirée",
+        });
+      }
+
+      const rotatedUser = await User.bumpRefreshTokenVersion(user.id);
+
+      const userPayload = {
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        tokenVersion: rotatedUser.refresh_token_version,
+      };
+
+      const accessToken = JWTService.generateAccessToken(userPayload);
+      const newRefreshToken = JWTService.generateRefreshToken(userPayload);
+
+      setRefreshCookie(res, newRefreshToken);
 
       res.json({
         message: "Tokens rafraîchis avec succès",
         tokens: {
-          accessToken: tokens.accessToken,
-          refreshToken: tokens.refreshToken,
+          accessToken,
+          refreshToken: newRefreshToken,
         },
-        user: tokens.user,
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          pseudonym: user.pseudonym,
+        },
       });
     } catch (error) {
       return res.status(401).json({
@@ -251,6 +335,7 @@ class AuthController {
 
   async logout(req, res, next) {
     try {
+      clearRefreshCookie(res);
       res.json({
         message: "Déconnexion réussie",
       });
