@@ -1,3 +1,4 @@
+const { validateCSRFToken } = require("../middlewares/csrf.middleware");
 const router = require("express").Router();
 const ctrl = require("../controllers/User.controller");
 const {
@@ -140,7 +141,13 @@ router.get(
  *       500:
  *         description: Erreur serveur
  */
-router.put("/:id", validateUserUpdate, authorizeOwnResource(), ctrl.updateUser);
+router.put(
+  "/:id",
+  validateUserUpdate,
+  validateCSRFToken,
+  authorizeOwnResource(),
+  ctrl.updateUser
+);
 
 /**
  * @openapi
@@ -187,6 +194,7 @@ router.put("/:id", validateUserUpdate, authorizeOwnResource(), ctrl.updateUser);
 router.put(
   "/:id/password",
   validateUserPassword,
+  validateCSRFToken,
   authorizeOwnResource(),
   ctrl.updateUserPassword
 );
@@ -235,6 +243,7 @@ router.put(
 router.put(
   "/:id/last-login",
   validateUserLastLogin,
+  validateCSRFToken,
   authorizeOwnResource(),
   ctrl.updateUserLastLogin
 );
@@ -285,6 +294,7 @@ router.put(
 router.put(
   "/:id/workouts-completed",
   validateUserWorkoutIncrement,
+  validateCSRFToken,
   authorizeOwnResource(),
   ctrl.incrementUserWorkoutsCompleted
 );
@@ -324,6 +334,7 @@ router.put(
 router.delete(
   "/:id",
   validateUserIdParam,
+  validateCSRFToken,
   authorizeOwnResource(),
   ctrl.deleteUser
 );

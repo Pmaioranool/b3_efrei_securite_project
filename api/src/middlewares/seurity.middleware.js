@@ -20,13 +20,56 @@ const apiLimiter = rateLimit({
   },
 });
 
-// Configuration Helmet
+// Configuration Helmet avec sécurité renforcée
 const helmetConfig = helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
+  // HSTS : Force HTTPS pendant 1 an (31536000 secondes)
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  },
+  // Content Security Policy : Définit les sources autorisées
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"], // unsafe-inline pour Swagger
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+  // X-Frame-Options : Empêche le clickjacking
+  frameguard: { action: "deny" },
+  // X-Content-Type-Options : Empêche le MIME sniffing
+  noSniff: true,
+  // Referrer Policy
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
 });
+
+// Middleware pour forcer HTTPS (redirection HTTP -> HTTPS)
+const forceHTTPS = (req, res, next) => {
+  // Vérifier si la requête est déjà en HTTPS
+  if (req.secure || req.headers["x-forwarded-proto"] === "https") {
+    return next();
+  }
+  
+  // En développement, on peut autoriser HTTP
+  if (process.env.NODE_ENV !== "PRODUCTION" || process.env.USE_HTTPS !== "true") {
+    return next();
+  }
+  
+  // Rediriger vers HTTPS
+  return res.redirect(301, `https://${req.headers.host}${req.url}`);
+};
 
 module.exports = {
   authLimiter,
   apiLimiter,
   helmetConfig,
+  forceHTTPS,
 };

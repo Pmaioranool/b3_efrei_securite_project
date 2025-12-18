@@ -5,7 +5,14 @@ const path = require("path");
 const { pool } = require("../config/db.postgres");
 const { connectMongo } = require("../config/db.mongo");
 const { authorizeRoles } = require("../middlewares/auth.middleware");
+const {
+  generateCSRFToken,
+  validateCSRFToken,
+} = require("../middlewares/csrf.middleware");
 
+router.get("/csrf-token", generateCSRFToken, (req, res) => {
+  res.json({ token: req.csrfToken });
+});
 /* swagger omit */
 
 router.get("/test-db", authorizeRoles("ADMIN"), async (req, res) => {
@@ -30,15 +37,18 @@ router.get("/test-db", authorizeRoles("ADMIN"), async (req, res) => {
   }
 });
 
-router.get("/db/init", async (req, res) => {
+// pas d'autorisation admin pour l'init/reset (clé API requise)
+router.post("/db/init", validateCSRFToken, async (req, res) => {
+  // Bloquer en prod/staging par défaut
   if (process.env.NODE_ENV !== "DEVELOPMENT") {
     return res.status(403).json({
       status: "Forbidden",
-      error: "Database reset is not allowed in this environment",
+      error: "Database init is not allowed in this environment",
     });
   }
 
-  if (req.params.key !== process.env.DB_INIT_KEY) {
+  const apiKey = req.headers["x-db-init-key"];
+  if (!apiKey || apiKey !== process.env.DB_INIT_KEY) {
     return res.status(403).json({
       status: "Forbidden",
       error: "Invalid initialization key",
@@ -60,48 +70,55 @@ router.get("/db/init", async (req, res) => {
   }
 });
 
-router.get("/db/reset", async (req, res) => {
-  try {
-    // sécurité singe
-    if (process.env.NODE_ENV !== "DEVELOPMENT") {
-      return res.status(403).json({
-        status: "Forbidden",
-        error: "Database reset is not allowed in this environment",
-      });
-    }
-    const sure = req.query.sure;
-    if (sure !== "true") {
-      return res.status(400).json({
-        status: "Bad Request",
-        error: 'Please confirm reset by adding "?sure=true" to the request URL',
-      });
-    }
+router.post(
+  "/db/reset",
+  authorizeRoles("ADMIN"),
+  validateCSRFToken,
+  async (req, res) => {
+    try {
+      if (process.env.NODE_ENV !== "DEVELOPMENT") {
+        return res.status(403).json({
+          status: "Forbidden",
+          error: "Database reset is not allowed in this environment",
+        });
+      }
 
-    if (req.params.key !== process.env.DB_INIT_KEY) {
-      return res.status(403).json({
-        status: "Forbidden",
-        error: "Invalid initialization key",
+      const sure = req.body?.sure || req.query?.sure;
+      if (sure !== true && sure !== "true") {
+        return res.status(400).json({
+          status: "Bad Request",
+          error: 'Please confirm reset by sending {"sure": true}',
+        });
+      }
+
+      const apiKey = req.headers["x-db-init-key"];
+      if (!apiKey || apiKey !== process.env.DB_RESET_KEY) {
+        return res.status(403).json({
+          status: "Forbidden",
+          error: "Invalid initialization key",
+        });
+      }
+
+      const sqlResetFile = fs.readFileSync(
+        path.join(__dirname, "../../sql/reset.sql"),
+        "utf8"
+      );
+      await pool.query(sqlResetFile);
+
+      const sqlInitFile = fs.readFileSync(
+        path.join(__dirname, "../../sql/init.sql"),
+        "utf8"
+      );
+      await pool.query(sqlInitFile);
+      res.json({ status: "Database initialized after reset" });
+    } catch (error) {
+      res.status(500).json({
+        status: "Error resetting database",
+        error: error.message,
       });
     }
-    const sqlResetFile = fs.readFileSync(
-      path.join(__dirname, "../../sql/reset.sql"),
-      "utf8"
-    );
-    await pool.query(sqlResetFile);
-
-    const sqlInitFile = fs.readFileSync(
-      path.join(__dirname, "../../sql/init.sql"),
-      "utf8"
-    );
-    await pool.query(sqlInitFile);
-    res.json({ status: "Database initialized after reset" });
-  } catch (error) {
-    res.status(500).json({
-      status: "Error resetting database",
-      error: error.message,
-    });
   }
-});
+);
 
 router.get("/test/roles", authorizeRoles("ADMIN"), (req, res) => {
   res.json({

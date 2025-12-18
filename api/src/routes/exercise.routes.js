@@ -1,3 +1,4 @@
+const { validateCSRFToken } = require("../middlewares/csrf.middleware");
 const router = require("express").Router();
 const ctrl = require("../controllers/Exercise.controller");
 const { authorizeRoles } = require("../middlewares/auth.middleware");
@@ -116,7 +117,12 @@ router.get("/:id", ctrl.getExerciseById);
  *       500:
  *         description: Erreur serveur
  */
-router.post("/", authorizeRoles("ADMIN"), ctrl.createExercise);
+router.post(
+  "/",
+  validateCSRFToken,
+  authorizeRoles("ADMIN"),
+  ctrl.createExercise
+);
 
 /**
  * @openapi
@@ -152,7 +158,12 @@ router.post("/", authorizeRoles("ADMIN"), ctrl.createExercise);
  *       500:
  *         description: Erreur serveur
  */
-router.put("/:id", authorizeRoles("ADMIN"), ctrl.updateExercise);
+router.put(
+  "/:id",
+  validateCSRFToken,
+  authorizeRoles("ADMIN"),
+  ctrl.updateExercise
+);
 
 /**
  * @openapi
@@ -186,6 +197,11 @@ router.put("/:id", authorizeRoles("ADMIN"), ctrl.updateExercise);
  *       500:
  *         description: Erreur serveur
  */
-router.delete("/:id", authorizeRoles("ADMIN"), ctrl.deleteExercise);
+router.delete(
+  "/:id",
+  validateCSRFToken,
+  authorizeRoles("ADMIN"),
+  ctrl.deleteExercise
+);
 
 module.exports = router;
