@@ -1,0 +1,1032 @@
+{
+	"info": {
+		"_postman_id": "1c306d84-a963-47b5-aaea-cdf96cbe82d3",
+		"name": "GymFit API - Complete Collection",
+		"description": "Collection complète pour l'API GymFit avec authentification JWT, RGPD, et sécurité renforcée",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "41670281"
+	},
+	"item": [
+		{
+			"name": "🔐 Authentication",
+			"item": [
+				{
+					"name": "admin",
+					"item": [
+						{
+							"name": "Register Admin",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-CSRF-Token",
+										"value": "{{csrfToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"pseudonym\": \"admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"Admin@1234\"\n}"
+								},
+								"url": "{{baseUrl}}/auth/register/admin"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "New Folder",
+					"item": [
+						{
+							"name": "Login",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 200) {",
+											"    var jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('accessToken', jsonData.tokens.accessToken);",
+											"    pm.collectionVariables.set('refreshToken', jsonData.tokens.refreshToken);",
+											"    pm.collectionVariables.set('userId', jsonData.user.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-CSRF-Token",
+										"value": "{{csrfToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Test@1234\"\n}"
+								},
+								"url": "{{baseUrl}}/auth/login"
+							},
+							"response": []
+						},
+						{
+							"name": "Register User",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    var jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('accessToken', jsonData.tokens.accessToken);",
+											"    pm.collectionVariables.set('refreshToken', jsonData.tokens.refreshToken);",
+											"    pm.collectionVariables.set('userId', jsonData.user.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-CSRF-Token",
+										"value": "{{csrfToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"pseudonym\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"password\": \"Test@1234\"\n}"
+								},
+								"url": "{{baseUrl}}/auth/register"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Get CSRF Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('csrfToken', jsonData.token);",
+									"    console.log('CSRF Token saved:', jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/csrf-token"
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('accessToken', jsonData.tokens.accessToken);",
+									"    pm.collectionVariables.set('refreshToken', jsonData.tokens.refreshToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-CSRF-Token",
+								"value": "{{csrfToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+						},
+						"url": "{{baseUrl}}/auth/refresh"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/auth/profile"
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRF-Token",
+								"value": "{{csrfToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/auth/logout"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints d'authentification JWT avec CSRF protection"
+		},
+		{
+			"name": "👥 Users",
+			"item": [
+				{
+					"name": "Get All Users (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users?page=1&pagesize=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "pagesize",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/users/{{userId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-CSRF-Token",
+								"value": "{{csrfToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"pseudonym\": \"updateduser\",\n  \"email\": \"updated@example.com\"\n}"
+						},
+						"url": "{{baseUrl}}/users/{{userId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Password",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-CSRF-Token",
+								"value": "{{csrfToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password\": \"NewPassword@1234\"\n}"
+						},
+						"url": "{{baseUrl}}/users/{{userId}}/password"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-CSRF-Token",
+								"value": "{{csrfToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/users/{{userId}}"
+					},
+					"response": []
+				}
+			],
+			"description": "Gestion des utilisateurs"
+		},
+		{
+			"name": "💪 Exercises",
+			"item": [
+				{
+					"name": "Get All Exercises",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/exercises?limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"exercises"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Exercise by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/exercises/{{exerciseId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Exercise",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('exerciseId', jsonData._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-CSRF-Token",
+								"value": "{{csrfToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"Title\": \"Push Up\",\n  \"Desc\": \"Classic upper body exercise\",\n  \"Type\": \"Strength\",\n  \"BodyPart\": \"Chest\",\n  \"Equipment\": \"Bodyweight\",\n  \"Level\": \"Beginner\",\n  \"Rating\": 4.5,\n  \"RatingDesc\": \"Excellent for chest development\"\n}"
+						},
+						"url": "{{baseUrl}}/exercises"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Exercise",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-CSRF-Token",
+								"value": "{{csrfToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"Title\": \"Modified Push Up\",\n  \"Level\": \"Intermediate\"\n}"
+						},
+						"url": "{{baseUrl}}/exercises/{{exerciseId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Exercise",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-CSRF-Token",
+								"value": "{{csrfToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/exercises/{{exerciseId}}"
+					},
+					"response": []
+				}
+			],
+			"description": "Gestion des exercices de fitness"
+		},
+		{
+			"name": "🏋️ Workouts",
+			"item": [
+				{
+					"name": "Get All Workouts (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/workouts"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Workout by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/workouts/{{workoutId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Workout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('workoutId', jsonData._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-CSRF-Token",
+								"value": "{{csrfToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": {{userId}},\n  \"name\": \"Full Body Workout\",\n  \"exercises\": [\n    {\n      \"exercise\": \"{{exerciseId}}\",\n      \"sets\": [\n        {\n          \"rest\": 60,\n          \"rep\": 10,\n          \"weight\": 20\n        },\n        {\n          \"rest\": 60,\n          \"rep\": 10,\n          \"weight\": 20\n        }\n      ]\n    }\n  ]\n}"
+						},
+						"url": "{{baseUrl}}/workouts"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Workout",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-CSRF-Token",
+								"value": "{{csrfToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Workout Name\"\n}"
+						},
+						"url": "{{baseUrl}}/workouts/{{workoutId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Workout",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-CSRF-Token",
+								"value": "{{csrfToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/workouts/{{workoutId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Templates",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/workouts/templates"
+					},
+					"response": []
+				},
+				{
+					"name": "Clone Template",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-CSRF-Token",
+								"value": "{{csrfToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": {{userId}}\n}"
+						},
+						"url": "{{baseUrl}}/workouts/{{workoutId}}/clone"
+					},
+					"response": []
+				}
+			],
+			"description": "Gestion des programmes d'entraînement"
+		},
+		{
+			"name": "🗓️ Routines",
+			"item": [
+				{
+					"name": "Get All Routines (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/routines"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Routine by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/routines/{{routineId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Routine",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('routineId', jsonData._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-CSRF-Token",
+								"value": "{{csrfToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": {{userId}},\n  \"workoutId\": \"{{workoutId}}\",\n  \"cron\": \"0 8 * * 1-5\",\n  \"timezone\": \"Europe/Paris\"\n}"
+						},
+						"url": "{{baseUrl}}/routines"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Routine",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-CSRF-Token",
+								"value": "{{csrfToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"cron\": \"0 9 * * 1-5\"\n}"
+						},
+						"url": "{{baseUrl}}/routines/{{routineId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Routine",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-CSRF-Token",
+								"value": "{{csrfToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/routines/{{routineId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Routines",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/routines/user/{{userId}}"
+					},
+					"response": []
+				}
+			],
+			"description": "Gestion des routines planifiées (CRON)"
+		},
+		{
+			"name": "🔒 RGPD",
+			"item": [
+				{
+					"name": "Get My Data (Article 15)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/rgpd/my-data",
+						"description": "Droit d'accès - Récupère toutes les données personnelles de l'utilisateur"
+					},
+					"response": []
+				},
+				{
+					"name": "Export My Data (Article 20)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/rgpd/export",
+						"description": "Portabilité des données - Télécharge un fichier JSON avec toutes les données"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete My Account (Article 17)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-CSRF-Token",
+								"value": "{{csrfToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"confirmation\": \"DELETE_MY_ACCOUNT\"\n}"
+						},
+						"url": "{{baseUrl}}/rgpd/delete-account",
+						"description": "Droit à l'oubli - Supprime définitivement toutes les données de l'utilisateur"
+					},
+					"response": []
+				},
+				{
+					"name": "Anonymize My Account",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-CSRF-Token",
+								"value": "{{csrfToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/rgpd/anonymize",
+						"description": "Anonymisation - Alternative à la suppression, conserve les données anonymisées"
+					},
+					"response": []
+				}
+			],
+			"description": "Gestion des droits RGPD (accès, portabilité, oubli)"
+		},
+		{
+			"name": "🔧 Utilities",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/status"
+					},
+					"response": []
+				},
+				{
+					"name": "Test Database Connections",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/test-db"
+					},
+					"response": []
+				},
+				{
+					"name": "Init Database (Dev Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-CSRF-Token",
+								"value": "{{csrfToken}}"
+							},
+							{
+								"key": "X-DB-Init-Key",
+								"value": "your-secret-key",
+								"description": "Clé API pour initialisation (voir .env)"
+							}
+						],
+						"url": "{{baseUrl}}/db/init"
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Database (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRF-Token",
+								"value": "{{csrfToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/db/reset"
+					},
+					"response": []
+				},
+				{
+					"name": "Test Admin Role",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{accessToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/test/roles"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints utilitaires et administration"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Log de la requête",
+					"console.log('Request to:', pm.request.url.toString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Tests automatiques globaux",
+					"pm.test('Response time is acceptable', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(3000);",
+					"});",
+					"",
+					"// Log du statut",
+					"console.log('Status:', pm.response.code, pm.response.status);"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000/api",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "exerciseId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "workoutId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "routineId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "csrfToken",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
