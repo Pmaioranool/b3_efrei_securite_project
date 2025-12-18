@@ -1,3 +1,4 @@
+const { validateCSRFToken } = require("../middlewares/csrf.middleware");
 const router = require("express").Router();
 const ctrl = require("../controllers/Workout.controller");
 const {
@@ -159,7 +160,7 @@ router.get(
  *       500:
  *         description: Erreur serveur
  */
-router.post("/", authorizeOwnResource(), ctrl.createWorkout);
+router.post("/", validateCSRFToken, authorizeOwnResource(), ctrl.createWorkout);
 
 /**
  * @openapi
@@ -195,7 +196,12 @@ router.post("/", authorizeOwnResource(), ctrl.createWorkout);
  *       500:
  *         description: Erreur serveur
  */
-router.put("/:id", authorizeOwnResource(), ctrl.updateWorkout);
+router.put(
+  "/:id",
+  validateCSRFToken,
+  authorizeOwnResource(),
+  ctrl.updateWorkout
+);
 
 /**
  * @openapi
@@ -236,7 +242,11 @@ router.put("/:id", authorizeOwnResource(), ctrl.updateWorkout);
  *       500:
  *         description: Erreur serveur
  */
-router.post("/templates/:templateId/clone", ctrl.cloneTemplate);
+router.post(
+  "/templates/:templateId/clone",
+  validateCSRFToken,
+  ctrl.cloneTemplate
+);
 
 /**
  * @openapi
@@ -270,6 +280,11 @@ router.post("/templates/:templateId/clone", ctrl.cloneTemplate);
  *       500:
  *         description: Erreur serveur
  */
-router.delete("/:id", authorizeOwnResource(), ctrl.deleteWorkout);
+router.delete(
+  "/:id",
+  validateCSRFToken,
+  authorizeOwnResource(),
+  ctrl.deleteWorkout
+);
 
 module.exports = router;
