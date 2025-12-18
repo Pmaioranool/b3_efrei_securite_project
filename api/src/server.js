@@ -11,7 +11,12 @@ require("dotenv").config();
 const {
   helmetConfig,
   apiLimiter,
+  forceHTTPS,
 } = require("./middlewares/seurity.middleware");
+
+// Force HTTPS redirection (doit être avant CORS)
+app.use(forceHTTPS);
+
 // Configuration CORS
 app.use(
   cors({

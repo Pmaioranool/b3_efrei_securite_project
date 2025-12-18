@@ -51,8 +51,25 @@ const helmetConfig = helmet({
   referrerPolicy: { policy: "strict-origin-when-cross-origin" },
 });
 
+// Middleware pour forcer HTTPS (redirection HTTP -> HTTPS)
+const forceHTTPS = (req, res, next) => {
+  // Vérifier si la requête est déjà en HTTPS
+  if (req.secure || req.headers["x-forwarded-proto"] === "https") {
+    return next();
+  }
+  
+  // En développement, on peut autoriser HTTP
+  if (process.env.NODE_ENV !== "PRODUCTION" || process.env.USE_HTTPS !== "true") {
+    return next();
+  }
+  
+  // Rediriger vers HTTPS
+  return res.redirect(301, `https://${req.headers.host}${req.url}`);
+};
+
 module.exports = {
   authLimiter,
   apiLimiter,
   helmetConfig,
+  forceHTTPS,
 };
