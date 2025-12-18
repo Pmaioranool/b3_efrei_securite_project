@@ -92,7 +92,7 @@ router.post(
       }
 
       const apiKey = req.headers["x-db-init-key"];
-      if (!apiKey || apiKey !== process.env.DB_INIT_KEY) {
+      if (!apiKey || apiKey !== process.env.DB_RESET_KEY) {
         return res.status(403).json({
           status: "Forbidden",
           error: "Invalid initialization key",
