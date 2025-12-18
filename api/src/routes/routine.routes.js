@@ -1,3 +1,4 @@
+const { validateCSRFToken } = require("../middlewares/csrf.middleware");
 const router = require("express").Router();
 const ctrl = require("../controllers/routine.controller");
 const {
@@ -138,6 +139,7 @@ router.get(
 router.post(
   "/",
   validateRoutineCreation,
+  validateCSRFToken,
   authorizeOwnResource(),
   ctrl.createRoutine
 );
@@ -181,6 +183,7 @@ router.post(
 router.put(
   "/:id",
   validateRoutineCreation,
+  validateCSRFToken,
   authorizeOwnResource(),
   ctrl.updateRoutine
 );
@@ -217,6 +220,11 @@ router.put(
  *       500:
  *         description: Erreur serveur
  */
-router.delete("/:id", authorizeOwnResource(), ctrl.deleteRoutine);
+router.delete(
+  "/:id",
+  validateCSRFToken,
+  authorizeOwnResource(),
+  ctrl.deleteRoutine
+);
 
 module.exports = router;
