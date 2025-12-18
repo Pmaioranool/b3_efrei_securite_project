@@ -4,7 +4,11 @@ const cors = require("cors");
 const PORT = 3000;
 const { pool } = require("./config/db.postgres");
 const { connectMongo } = require("./config/db.mongo");
-
+require("dotenv").config();
+const {
+  helmetConfig,
+  apiLimiter,
+} = require("./middlewares/seurity.middleware");
 // Configuration CORS
 app.use(
   cors({
@@ -14,6 +18,9 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+app.use(helmetConfig);
+app.use(apiLimiter);
 
 app.use(express.json());
 

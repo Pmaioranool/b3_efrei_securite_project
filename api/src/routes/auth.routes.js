@@ -10,6 +10,10 @@ const {
   validateLogin,
   validateRefresh,
 } = require("../middlewares/validator/auth.validation");
+const {
+  authLimiter,
+  apiLimiter,
+} = require("../middlewares/seurity.middleware");
 
 /**
  * @openapi
@@ -38,7 +42,7 @@ const {
  *       409:
  *         description: Utilisateur déjà existant
  */
-router.post("/register", validateRegister, AuthController.register);
+router.post("/register", validateRegister, apiLimiter, AuthController.register);
 
 /**
  * @openapi
@@ -64,6 +68,7 @@ router.post(
   "/register/admin",
   validateRegister,
   authorizeRoles("ADMIN"),
+  authLimiter,
   AuthController.registerAdmin
 );
 
@@ -97,7 +102,7 @@ router.post(
  *       401:
  *         description: Identifiants invalides
  */
-router.post("/login", validateLogin, AuthController.login);
+router.post("/login", validateLogin, authLimiter, AuthController.login);
 
 /**
  * @openapi
@@ -123,7 +128,7 @@ router.post("/login", validateLogin, AuthController.login);
  *       401:
  *         description: Refresh token invalide
  */
-router.post("/refresh", validateRefresh, AuthController.refresh);
+router.post("/refresh", validateRefresh, authLimiter, AuthController.refresh);
 
 /**
  * @openapi
@@ -158,6 +163,6 @@ router.get(
  *       200:
  *         description: Déconnexion réussie
  */
-router.post("/logout", authenticateToken, AuthController.logout);
+router.post("/logout", authenticateToken, authLimiter, AuthController.logout);
 
 module.exports = router;
