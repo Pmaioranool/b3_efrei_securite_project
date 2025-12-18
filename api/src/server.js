@@ -1,7 +1,10 @@
 const express = require("express");
+const https = require("https");
+const fs = require("fs");
+const path = require("path");
 const app = express();
 const cors = require("cors");
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const { pool } = require("./config/db.postgres");
 const { connectMongo } = require("./config/db.mongo");
 require("dotenv").config();
@@ -76,4 +79,29 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Erreur interne serveur" });
 });
 
-app.listen(PORT, () => console.log(` API prête sur http://localhost:${PORT}`));
+// Configuration HTTPS avec certificats auto-signés (dev) ou production
+if (process.env.NODE_ENV === "PRODUCTION" && process.env.USE_HTTPS === "true") {
+  try {
+    const httpsOptions = {
+      key: fs.readFileSync(path.join(__dirname, "../certs/private-key.pem")),
+      cert: fs.readFileSync(path.join(__dirname, "../certs/certificate.pem")),
+    };
+
+    https.createServer(httpsOptions, app).listen(PORT, () => {
+      console.log(`🔒 API sécurisée (HTTPS) sur https://localhost:${PORT}`);
+      console.log(
+        `⚠️  Certificat auto-signé : ignorer l'avertissement du navigateur`
+      );
+    });
+  } catch (error) {
+    console.error("❌ Erreur chargement certificats HTTPS:", error.message);
+    console.log("ℹ️  Basculement sur HTTP...");
+    app.listen(PORT, () =>
+      console.log(`⚡ API prête sur http://localhost:${PORT}`)
+    );
+  }
+} else {
+  app.listen(PORT, () =>
+    console.log(`⚡ API prête sur http://localhost:${PORT}`)
+  );
+}
