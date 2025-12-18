@@ -5,7 +5,7 @@ const JWTService = require("../utils/jwt");
 class User {
   static async getAll(page = 1, pagesize = 10) {
     const res = await pool.query(
-      "SELECT id, pseudonym, email, role, birthdate, last_login, created_at, updated_at FROM users ORDER BY id"
+      "SELECT id, pseudonym, email, role, last_login, created_at, updated_at FROM users ORDER BY id"
     );
     console.log(page, pagesize);
     const start = (page - 1) * pagesize;
@@ -16,7 +16,15 @@ class User {
 
   static async getById(id) {
     const res = await pool.query(
-      "SELECT id, pseudonym, email, role, birthdate, last_login, created_at, updated_at FROM users WHERE id = $1",
+      "SELECT id, pseudonym, email, role, last_login, created_at, updated_at FROM users WHERE id = $1",
+      [id]
+    );
+    return res.rows[0] || null;
+  }
+
+  static async getAuthState(id) {
+    const res = await pool.query(
+      "SELECT id, email, role, pseudonym, refresh_token_version, password_updated_at FROM users WHERE id = $1",
       [id]
     );
     return res.rows[0] || null;
@@ -38,25 +46,19 @@ class User {
 
   // Création : le mot de passe en clair est immédiatement haché via JWTService
   // (bcrypt + pepper optionnel) avant insertion en base.
-  static async create({
-    pseudonym,
-    email,
-    password,
-    birthdate,
-    role = "user",
-  }) {
+  static async create({ pseudonym, email, password, role = "user" }) {
     const hashedPassword = await JWTService.hashPassword(password);
     const res = await pool.query(
-      "INSERT INTO users (pseudonym, email, password, birthdate, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, pseudonym, email, birthdate, last_login, created_at, updated_at",
-      [pseudonym, email, hashedPassword, birthdate, role]
+      "INSERT INTO users (pseudonym, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, pseudonym, email, role, last_login, created_at, updated_at, password_updated_at, refresh_token_version",
+      [pseudonym, email, hashedPassword, role]
     );
     return res.rows[0];
   }
 
-  static async update(id, { pseudonym, email, birthdate }) {
+  static async update(id, { pseudonym, email }) {
     const res = await pool.query(
-      "UPDATE users SET pseudonym = $1, email = $2, birthdate = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4 RETURNING id, pseudonym, email, birthdate, last_login, created_at, updated_at",
-      [pseudonym, email, birthdate, id]
+      "UPDATE users SET pseudonym = $1, email = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING id, pseudonym, email, role, last_login, created_at, updated_at",
+      [pseudonym, email, id]
     );
     return res.rows[0] || null;
   }
@@ -66,7 +68,7 @@ class User {
   static async updatePassword(id, password) {
     const hashedPassword = await JWTService.hashPassword(password);
     const res = await pool.query(
-      "UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, pseudonym, email, birthdate, last_login, created_at, updated_at",
+      "UPDATE users SET password = $1, password_updated_at = CURRENT_TIMESTAMP, refresh_token_version = refresh_token_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, pseudonym, email, role, last_login, created_at, updated_at, password_updated_at, refresh_token_version",
       [hashedPassword, id]
     );
     return res.rows[0] || null;
@@ -74,8 +76,16 @@ class User {
 
   static async updateLastLogin(id, lastLogin) {
     const res = await pool.query(
-      "UPDATE users SET last_login = $1 WHERE id = $2 RETURNING id, pseudonym, email, birthdate, last_login, created_at, updated_at",
+      "UPDATE users SET last_login = $1 WHERE id = $2 RETURNING id, pseudonym, email, role, last_login, created_at, updated_at, password_updated_at, refresh_token_version",
       [lastLogin, id]
+    );
+    return res.rows[0] || null;
+  }
+
+  static async bumpRefreshTokenVersion(id) {
+    const res = await pool.query(
+      "UPDATE users SET refresh_token_version = refresh_token_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING id, email, role, pseudonym, refresh_token_version, password_updated_at, last_login, created_at, updated_at",
+      [id]
     );
     return res.rows[0] || null;
   }
