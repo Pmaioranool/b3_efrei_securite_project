@@ -13,6 +13,7 @@ const {
   apiLimiter,
   forceHTTPS,
 } = require("./middlewares/seurity.middleware");
+const { sanitizeXSS } = require("./middlewares/xss.middleware");
 
 // Force HTTPS redirection (doit être avant CORS)
 app.use(forceHTTPS);
@@ -23,7 +24,7 @@ app.use(
     origin: process.env.CLIENT_URL || "http://localhost:3000",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
   })
 );
 
@@ -31,6 +32,9 @@ app.use(helmetConfig);
 app.use(apiLimiter);
 
 app.use(express.json());
+
+// Sanitization XSS : nettoyer les inputs
+app.use(sanitizeXSS);
 
 // Connexion aux bases de données avant de démarrer le serveur
 async function startServer() {
