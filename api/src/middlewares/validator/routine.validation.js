@@ -5,12 +5,6 @@ const mongoose = require("mongoose");
 const { CronExpressionParser } = require("cron-parser");
 
 exports.validateRoutineCreation = [
-  body("userId")
-    .notEmpty()
-    .withMessage("userId est requis")
-    .isInt({ min: 1 })
-    .withMessage("userId doit être un nombre entier valide"),
-
   body("workoutId")
     .notEmpty()
     .withMessage("workoutId est requis")

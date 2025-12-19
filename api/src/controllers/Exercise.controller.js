@@ -2,13 +2,14 @@ const Exercise = require("../models/Exercise.model");
 
 exports.getExercise = async (req, res, next) => {
   try {
-    const { title, level, rating, limit, all } = req.query;
+    const { title, BodyPart, Equipment, limit, skip, all } = req.query;
 
     const exercises = await Exercise.getAll({
       title,
-      level,
-      rating,
+      BodyPart,
+      Equipment,
       limit,
+      skip,
       all,
     });
     return res.status(200).json(exercises);

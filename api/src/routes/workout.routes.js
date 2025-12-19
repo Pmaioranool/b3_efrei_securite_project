@@ -2,8 +2,10 @@ const { validateCSRFToken } = require("../middlewares/csrf.middleware");
 const router = require("express").Router();
 const ctrl = require("../controllers/Workout.controller");
 const {
+  authenticateToken,
   authorizeOwnResource,
   authorizeRoles,
+  authorizeWorkoutAccess,
 } = require("../middlewares/auth.middleware");
 
 /**
@@ -80,7 +82,32 @@ router.get("/templates", ctrl.getTemplates);
  *       500:
  *         description: Erreur serveur
  */
-router.get("/:id", authorizeOwnResource(), ctrl.getWorkoutById);
+router.get("/:id", authorizeWorkoutAccess, ctrl.getWorkoutById);
+
+/**
+ * @openapi
+ * /api/workouts/user/me:
+ *   get:
+ *     summary: Récupérer les workouts de l'utilisateur connecté
+ *     description: Retourne la liste des workouts personnels de l'utilisateur authentifié
+ *     tags: [Workouts]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des workouts récupérée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Workout'
+ *       401:
+ *         description: Non authentifié
+ *       500:
+ *         description: Erreur serveur
+ */
+router.get("/user/me", authenticateToken, ctrl.getWorkoutsByCurrentUser);
 
 /**
  * @openapi
@@ -160,7 +187,7 @@ router.get(
  *       500:
  *         description: Erreur serveur
  */
-router.post("/", validateCSRFToken, authorizeOwnResource(), ctrl.createWorkout);
+router.post("/", authenticateToken, validateCSRFToken, ctrl.createWorkout);
 
 /**
  * @openapi
@@ -198,8 +225,8 @@ router.post("/", validateCSRFToken, authorizeOwnResource(), ctrl.createWorkout);
  */
 router.put(
   "/:id",
+  authorizeWorkoutAccess,
   validateCSRFToken,
-  authorizeOwnResource(),
   ctrl.updateWorkout
 );
 
@@ -282,8 +309,8 @@ router.post(
  */
 router.delete(
   "/:id",
+  authorizeWorkoutAccess,
   validateCSRFToken,
-  authorizeOwnResource(),
   ctrl.deleteWorkout
 );
 

@@ -20,14 +20,24 @@ const ExerciseSchema = new Schema(
 const ExerciseModel = mongoose.model("Exercise", ExerciseSchema);
 
 class Exercise {
-  static async getAll({ title, level, rating, limit, all = false } = {}) {
+  static async getAll({
+    title,
+    BodyPart,
+    Equipment,
+    limit,
+    skip,
+    all = false,
+  } = {}) {
     const filters = {};
     if (title) filters.Title = new RegExp(title, "i");
-    if (rating > 0) filters.Rating = { $gte: rating };
-    if (level) filters.Level = level;
+    if (BodyPart) filters.BodyPart = BodyPart;
+    if (Equipment) filters.Equipment = Equipment;
 
     let query = ExerciseModel.find(filters);
 
+    if (skip !== undefined) {
+      query = query.skip(parseInt(skip || 0, 10));
+    }
     if (!all) {
       query = query.limit(parseInt(limit || 10, 10));
     }

@@ -1,0 +1,5 @@
+{
+  "name": "GymTracker",
+  "description": "A high-fidelity fitness tracking application featuring workout planning, statistics, profile management, and live session tracking.",
+  "requestFramePermissions": []
+}
