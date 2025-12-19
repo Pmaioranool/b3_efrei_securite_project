@@ -12,6 +12,7 @@ exports.getExercise = async (req, res, next) => {
       skip,
       all,
     });
+    console.log(exercises);
     return res.status(200).json(exercises);
   } catch (e) {
     next(e);

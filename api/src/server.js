@@ -1,4 +1,5 @@
 const express = require("express");
+require("dotenv").config(); // Must be first
 const https = require("https");
 const fs = require("fs");
 const path = require("path");
@@ -7,7 +8,6 @@ const cors = require("cors");
 const PORT = process.env.PORT || 3000;
 const { pool } = require("./config/db.postgres");
 const { connectMongo } = require("./config/db.mongo");
-require("dotenv").config();
 const {
   helmetConfig,
   apiLimiter,
