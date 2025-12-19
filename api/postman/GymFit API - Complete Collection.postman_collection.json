@@ -913,7 +913,7 @@
 							},
 							{
 								"key": "X-DB-Init-Key",
-								"value": "your-secret-key",
+								"value": "your_db_init_key",
 								"description": "Clé API pour initialisation (voir .env)"
 							}
 						],
