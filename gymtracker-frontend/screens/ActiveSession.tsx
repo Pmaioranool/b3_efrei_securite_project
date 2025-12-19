@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApp, Exercise, Set as SetType, Session } from '../context/AppContext';
+import workoutService from '../services/workoutService';
 
 type UIState = 'START_UI' | 'ACTIVE_SET_UI' | 'REST_UI' | 'SUMMARY_UI';
 
@@ -267,7 +268,19 @@ const ActiveSession: React.FC = () => {
 
         <div className="fixed bottom-0 left-0 right-0 p-6 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-t border-gray-100 dark:border-white/10 z-30">
            <button 
-            onClick={() => { completeSession(session.id); navigate('/stats'); }}
+            onClick={async () => { 
+              try {
+                if (sessionId) {
+                  await workoutService.completeWorkout(sessionId);
+                }
+                completeSession(session.id); 
+                navigate('/stats'); 
+              } catch (error) {
+                console.error('Erreur lors de la complétion:', error);
+                completeSession(session.id); 
+                navigate('/stats');
+              }
+            }}
             className="w-full max-w-md mx-auto block py-5 bg-primary text-black font-black text-lg rounded-3xl shadow-glow shadow-primary/40 active:scale-95 transition-all"
           >
             VALIDER LA SÉANCE

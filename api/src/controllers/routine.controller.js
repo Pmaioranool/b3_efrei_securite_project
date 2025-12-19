@@ -30,7 +30,9 @@ exports.getRoutinesByUserId = async (req, res, next) => {
 
 exports.createRoutine = async (req, res, next) => {
   try {
-    const { userId, workoutId, cron, timezone } = req.body;
+    const { workoutId, cron, timezone } = req.body;
+    // Use userId from authenticated token, not from body
+    const userId = req.user.userId;
     const newRoutine = await Routine.create({
       userId,
       workoutId,

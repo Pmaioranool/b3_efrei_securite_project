@@ -1,28 +1,12 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, Exercise, Set as SetType, Session } from '../context/AppContext';
+import workoutService from '../services/workoutService';
+import exerciseService from '../services/exerciseService';
 
-const AVAILABLE_EXERCISES = [
-  { name: 'Développé Couché', muscle: 'Pectoraux', type: 'barbell' },
-  { name: 'DC Haltères', muscle: 'Pectoraux', type: 'dumbbell' },
-  { name: 'Pompes', muscle: 'Pectoraux', type: 'bodyweight' },
-  { name: 'Tractions', muscle: 'Dos', type: 'bodyweight' },
-  { name: 'Tirage Vertical', muscle: 'Dos', type: 'machine' },
-  { name: 'Rowing Haltère', muscle: 'Dos', type: 'dumbbell' },
-  { name: 'Squat', muscle: 'Jambes', type: 'barbell' },
-  { name: 'Presse à Cuisses', muscle: 'Jambes', type: 'machine' },
-  { name: 'Leg Extension', muscle: 'Jambes', type: 'machine' },
-  { name: 'Dips', muscle: 'Triceps', type: 'bodyweight' },
-  { name: 'Curl Haltères', muscle: 'Biceps', type: 'dumbbell' },
-  { name: 'Développé Militaire', muscle: 'Épaules', type: 'barbell' },
-  { name: 'Élévations Latérales', muscle: 'Épaules', type: 'dumbbell' },
-  { name: 'Gainage', muscle: 'Abdominaux', type: 'bodyweight' },
-  { name: 'Course à pied', muscle: 'Cardio', type: 'cardio' },
-];
-
-const MUSCLES = ['Tous', 'Pectoraux', 'Dos', 'Jambes', 'Épaules', 'Bras', 'Abdominaux', 'Cardio'];
-const TYPES = ['Tous', 'barbell', 'dumbbell', 'machine', 'bodyweight', 'cardio'];
+const MUSCLES = ['Tous', 'Abdominaux', 'Abducteurs', 'Adducteurs', 'Biceps', 'Mollets', 'Pectoraux', 'Avant-bras', 'Fessiers', 'Ischio-jambiers', 'Grands dorsaux', 'Bas du dos', 'Milieu du dos', 'Cou', 'Quadriceps', 'Épaules', 'Trapèzes', 'Triceps'];
+const TYPES = ['Tous', 'Bands', 'Barbell', 'Body Only', 'Cable', 'Dumbbell', 'E-Z Curl Bar', 'Exercise Ball', 'Foam Roll', 'Kettlebells', 'Machine', 'Medicine Ball', 'None', 'Other'];
 
 const NewSession: React.FC = () => {
   const navigate = useNavigate();
@@ -31,35 +15,183 @@ const NewSession: React.FC = () => {
   const [name, setName] = useState('');
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [isPickingExercise, setIsPickingExercise] = useState(false);
+  const [apiExercises, setApiExercises] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [activeMuscle, setActiveMuscle] = useState('Tous');
   const [activeType, setActiveType] = useState('Tous');
 
+  const [page, setPage] = useState(0);
+  const pageSize = 20;
+  const [error, setError] = useState<{ message: string; details: string } | null>(null);
+
+  useEffect(() => {
+    const frToApiBodyPart: Record<string, string> = {
+      'Abdominaux': 'Abdominals',
+      'Abducteurs': 'Abductors',
+      'Adducteurs': 'Adductors',
+      'Biceps': 'Biceps',
+      'Mollets': 'Calves',
+      'Pectoraux': 'Chest',
+      'Avant-bras': 'Forearms',
+      'Fessiers': 'Glutes',
+      'Ischio-jambiers': 'Hamstrings',
+      'Grands dorsaux': 'Lats',
+      'Bas du dos': 'Lower Back',
+      'Milieu du dos': 'Middle Back',
+      'Cou': 'Neck',
+      'Quadriceps': 'Quadriceps',
+      'Épaules': 'Shoulders',
+      'Trapèzes': 'Traps',
+      'Triceps': 'Triceps',
+      'Cardio': 'Cardio',
+    };
+
+    const translateBodyPartToFr = (api: string): string => {
+      const map: Record<string, string> = Object.fromEntries(
+        Object.entries(frToApiBodyPart).map(([fr, en]) => [en, fr])
+      );
+      return map[api] || api;
+    };
+
+    const loadExercises = async (reset = true) => {
+      setLoading(true);
+      try {
+        const BodyPart = activeMuscle === 'Tous' ? undefined : frToApiBodyPart[activeMuscle] || activeMuscle;
+        const Equipment = activeType === 'Tous' ? undefined : activeType;
+        const exs = await exerciseService.getExercisesFiltered({
+          BodyPart,
+          Equipment,
+          title: searchQuery,
+          page: reset ? 0 : page,
+          pageSize,
+        });
+        const mapped = exs.map((ex: any) => ({
+          id: ex._id || ex.id,
+          name: ex.Title || ex.name,
+          muscle: translateBodyPartToFr(ex.BodyPart || ''),
+          type: ex.Equipment || 'Other',
+        }));
+        setApiExercises(prev => (reset ? mapped : [...prev, ...mapped]));
+      } catch (error) {
+        console.error('Erreur lors du chargement des exercices:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // initial and when filters change -> reset
+    setPage(0);
+    loadExercises(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeMuscle, activeType, searchQuery]);
+
+  const availableExercises = apiExercises;
+
   const filteredAvailableExercises = useMemo(() => {
-    return AVAILABLE_EXERCISES.filter(ex => {
+    return availableExercises.filter(ex => {
+      if (!ex || !ex.name) return false;
       const matchSearch = ex.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchMuscle = activeMuscle === 'Tous' || ex.muscle === activeMuscle || (activeMuscle === 'Bras' && (ex.muscle === 'Biceps' || ex.muscle === 'Triceps'));
       const matchType = activeType === 'Tous' || ex.type === activeType;
       return matchSearch && matchMuscle && matchType;
     });
-  }, [searchQuery, activeMuscle, activeType]);
+  }, [searchQuery, activeMuscle, activeType, availableExercises]);
 
-  const handleSave = () => {
-    if (!name) return alert("Veuillez donner un nom à la séance");
-    if (exercises.length === 0) return alert("Ajoutez au moins un exercice");
+  const handleSave = async () => {
+    setError(null);
     
-    // Enregistre en tant que modèle (Library)
-    saveAsTemplate({
-      id: Date.now().toString(),
-      name: name,
-      date: new Date().toISOString(),
-      durationMinutes: 45,
-      status: 'planned',
-      exercises: exercises,
-    });
+    if (!name || name.trim().length === 0) {
+      return setError({
+        message: "Nom de séance requis",
+        details: "Vous devez donner un nom à votre séance pour pouvoir l'enregistrer et la retrouver facilement. Le nom ne peut pas être vide."
+      });
+    }
     
-    navigate('/workouts'); // Redirection vers la bibliothèque
+    if (exercises.length === 0) {
+      return setError({
+        message: "Aucun exercice ajouté",
+        details: "Une séance doit contenir au moins un exercice avec des séries définies. Cliquez sur le bouton 'Ajouter' pour sélectionner des exercices depuis la bibliothèque."
+      });
+    }
+    
+    // Validation des exercices et séries
+    const invalidExercises = exercises.filter(ex => !ex.sets || ex.sets.length === 0);
+    if (invalidExercises.length > 0) {
+      return setError({
+        message: "Exercices incomplets",
+        details: `${invalidExercises.length} exercice(s) n'ont pas de séries définies. Chaque exercice doit avoir au moins une série avec des valeurs (répétitions, poids, durée ou repos).`
+      });
+    }
+    
+    try {
+      setLoading(true);
+      
+      // Get userId from localStorage
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      const userId = user?.id;
+      
+      if (!userId) {
+        return setError({
+          message: "Session expirée",
+          details: "Votre session utilisateur a expiré. Veuillez vous reconnecter pour continuer."
+        });
+      }
+      
+      // Transform exercises to backend format
+      const transformedExercises = await Promise.all(exercises.map(async (ex) => {
+        // Get exercise ID from API by title search
+        const apiExercises = await exerciseService.getExercisesFiltered({
+          title: ex.name,
+          pageSize: 1,
+        });
+        const exerciseId = apiExercises[0]?._id || apiExercises[0]?.id;
+        
+        return {
+          exercise: exerciseId,
+          sets: ex.sets.map(set => ({
+            rep: set.reps || 0,
+            weight: set.weight || 0,
+            duration: set.durationSeconds || 0,
+            rest: set.restSeconds || 60,
+          })),
+        };
+      }));
+      
+      // Save to API
+      await workoutService.createWorkout({
+        name: name,
+        userId: parseInt(userId),
+        exercises: transformedExercises,
+        template: false,
+      });
+      
+      // Also save to local state
+      saveAsTemplate({
+        id: Date.now().toString(),
+        name: name,
+        date: new Date().toISOString(),
+        durationMinutes: 45,
+        status: 'planned',
+        exercises: exercises,
+      });
+      
+      navigate('/workouts');
+    } catch (error: any) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      setError({
+        message: "Échec de la sauvegarde",
+        details: error?.response?.status === 401
+          ? "Session expirée. Veuillez vous reconnecter."
+          : error?.response?.status === 400
+          ? "Données invalides. Vérifiez que tous les champs sont correctement remplis."
+          : "Erreur de connexion au serveur. Vérifiez votre connexion internet et réessayez."
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const addExerciseToSession = (exData: any) => {
@@ -159,8 +291,13 @@ const NewSession: React.FC = () => {
         </header>
 
         <main className="max-w-md mx-auto p-4 space-y-3">
-          {filteredAvailableExercises.length > 0 ? (
-            filteredAvailableExercises.map((ex, i) => (
+          {loading ? (
+            <div className="text-center py-20">
+              <span className="material-symbols-outlined text-6xl mb-4 animate-pulse text-zinc-300">fitness_center</span>
+              <p className="text-zinc-500 font-medium">Chargement des exercices...</p>
+            </div>
+          ) : apiExercises.length > 0 ? (
+            apiExercises.map((ex, i) => (
               <button 
                 key={i} 
                 onClick={() => addExerciseToSession(ex)}
@@ -184,6 +321,68 @@ const NewSession: React.FC = () => {
               <p className="text-zinc-500 font-medium">Aucun exercice trouvé</p>
             </div>
           )}
+          {!loading && (
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={async () => {
+                  const nextPage = page + 1;
+                  const frToApiBodyPart: Record<string, string> = {
+                    'Abdominaux': 'Abdominals',
+                    'Abducteurs': 'Abductors',
+                    'Adducteurs': 'Adductors',
+                    'Biceps': 'Biceps',
+                    'Mollets': 'Calves',
+                    'Pectoraux': 'Chest',
+                    'Avant-bras': 'Forearms',
+                    'Fessiers': 'Glutes',
+                    'Ischio-jambiers': 'Hamstrings',
+                    'Grands dorsaux': 'Lats',
+                    'Bas du dos': 'Lower Back',
+                    'Milieu du dos': 'Middle Back',
+                    'Cou': 'Neck',
+                    'Quadriceps': 'Quadriceps',
+                    'Épaules': 'Shoulders',
+                    'Trapèzes': 'Traps',
+                    'Triceps': 'Triceps',
+                    'Cardio': 'Cardio',
+                  };
+                  setLoading(true);
+                  try {
+                    const BodyPart = activeMuscle === 'Tous' ? undefined : frToApiBodyPart[activeMuscle] || activeMuscle;
+                    const Equipment = activeType === 'Tous' ? undefined : activeType;
+                    const exs = await exerciseService.getExercisesFiltered({
+                      BodyPart,
+                      Equipment,
+                      title: searchQuery,
+                      page: nextPage,
+                      pageSize: 20,
+                    });
+                    const translateBodyPartToFr = (api: string): string => {
+                      const map: Record<string, string> = Object.fromEntries(
+                        Object.entries(frToApiBodyPart).map(([fr, en]) => [en, fr])
+                      );
+                      return map[api] || api;
+                    };
+                    const mapped = exs.map((ex: any) => ({
+                      id: ex._id || ex.id,
+                      name: ex.Title || ex.name,
+                      muscle: translateBodyPartToFr(ex.BodyPart || ''),
+                      type: ex.Equipment || 'Other',
+                    }));
+                    setApiExercises(prev => [...prev, ...mapped]);
+                    setPage(nextPage);
+                  } catch (e) {
+                    console.error('Erreur pagination:', e);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                className="px-4 py-2 rounded-full border border-zinc-200 dark:border-zinc-700 text-sm font-bold"
+              >
+                Charger plus
+              </button>
+            </div>
+          )}
         </main>
       </div>
     );
@@ -197,13 +396,28 @@ const NewSession: React.FC = () => {
             <span className="material-symbols-outlined text-2xl">close</span>
           </button>
           <h1 className="text-base font-bold tracking-tight">Nouveau Modèle</h1>
-          <button onClick={handleSave} className="bg-primary text-black hover:bg-primary-dark px-5 py-2 rounded-full text-sm font-bold shadow-glow transition-all active:scale-95">
-             Enregistrer
+          <button onClick={handleSave} disabled={loading} className="bg-primary text-black hover:bg-primary-dark px-5 py-2 rounded-full text-sm font-bold shadow-glow transition-all active:scale-95 disabled:opacity-50">
+             {loading ? 'Enregistrement...' : 'Enregistrer'}
           </button>
         </div>
       </header>
 
       <main className="max-w-md mx-auto px-4 pt-6 flex flex-col gap-6">
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-r-xl">
+            <div className="flex items-start gap-3">
+              <span className="material-symbols-outlined text-red-500 mt-0.5">error</span>
+              <div className="flex-1">
+                <h3 className="font-bold text-red-800 dark:text-red-400 text-sm">{error.message}</h3>
+                <p className="text-xs text-red-600 dark:text-red-300 mt-1">{error.details}</p>
+              </div>
+              <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+          </div>
+        )}
+        
         <div className="relative group">
           <input 
             type="text" 

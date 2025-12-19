@@ -72,18 +72,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [sessions, setSessions] = useState<Session[]>([]);
   const [templates, setTemplates] = useState<Session[]>([]);
 
-  // Initialisation avec quelques données
-  useEffect(() => {
-    const mockEx: Exercise = {
-      id: 'ex1', name: 'Développé Couché', muscle: 'Pectoraux', type: 'barbell',
-      sets: [{ id: 's1', reps: 10, weight: 60, restSeconds: 60, completed: false }]
-    };
-    const mockTemplate: Session = {
-      id: 't1', name: 'Full Body A', date: new Date().toISOString(), durationMinutes: 60, status: 'planned', exercises: [mockEx], isTemplate: true
-    };
-    setTemplates([mockTemplate]);
-  }, []);
-
   const completeSession = (id: string) => {
     setSessions(prev => prev.map(s => s.id === id ? { ...s, status: 'completed', calories: s.durationMinutes * 8.5 } : s));
   };

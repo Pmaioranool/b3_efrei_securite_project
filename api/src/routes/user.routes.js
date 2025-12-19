@@ -13,6 +13,7 @@ const {
   validateUserLastLogin,
   validateUserWorkoutIncrement,
 } = require("../middlewares/validator/user.validation");
+const { authenticateToken } = require("../middlewares/auth.middleware");
 
 /**
  * @openapi
@@ -20,6 +21,71 @@ const {
  *   name: Users
  *   description: Gestion des utilisateurs
  */
+
+/**
+ * @openapi
+ * /api/users/me:
+ *   get:
+ *     summary: Récupérer l'utilisateur connecté
+ *     description: Retourne les détails de l'utilisateur actuellement connecté
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Détails de l'utilisateur récupérés avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Non authentifié
+ *       500:
+ *         description: Erreur serveur
+ */
+router.get("/me", authenticateToken, ctrl.getCurrentUser);
+
+/**
+ * @openapi
+ * /api/users/me/password:
+ *   put:
+ *     summary: Modifier le mot de passe de l'utilisateur connecté
+ *     description: Change le mot de passe après vérification de l'ancien
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 format: password
+ *               newPassword:
+ *                 type: string
+ *                 format: password
+ *     responses:
+ *       200:
+ *         description: Mot de passe modifié avec succès
+ *       401:
+ *         description: Mot de passe actuel incorrect
+ *       400:
+ *         description: Données invalides
+ *       500:
+ *         description: Erreur serveur
+ */
+router.put(
+  "/me/password",
+  validateCSRFToken,
+  authenticateToken,
+  ctrl.changePassword
+);
 
 /**
  * @openapi

@@ -50,6 +50,8 @@ exports.getWorkoutById = async (req, res, next) => {
 exports.createWorkout = async (req, res, next) => {
   try {
     const { name, userId, template, exercises } = req.body;
+    const authenticatedUserId = req.user?.userId;
+    const userRole = req.user?.role;
 
     if (!name) {
       return res.status(400).json({ error: "Le nom du workout est requis" });
@@ -64,6 +66,17 @@ exports.createWorkout = async (req, res, next) => {
         .status(400)
         .json({ error: "Un template ne doit pas contenir de userId" });
     }
+
+    // Verify user can only create workouts for themselves (unless admin)
+    if (!template && userId && userRole !== "ADMIN") {
+      if (String(authenticatedUserId) !== String(userId)) {
+        return res.status(403).json({
+          error: "Accès refusé",
+          message: "Vous pouvez uniquement créer des workouts pour vous-même.",
+        });
+      }
+    }
+
     if (exercises !== undefined) {
       validateExercisesPayload(exercises);
     }
@@ -144,6 +157,19 @@ exports.cloneTemplate = async (req, res, next) => {
 exports.getWorkoutsByUserId = async (req, res, next) => {
   try {
     const { userId } = req.params;
+    const workouts = await Workout.getByUserId(userId);
+    return res.status(200).json(workouts);
+  } catch (e) {
+    next(e);
+  }
+};
+
+exports.getWorkoutsByCurrentUser = async (req, res, next) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Utilisateur non authentifié" });
+    }
     const workouts = await Workout.getByUserId(userId);
     return res.status(200).json(workouts);
   } catch (e) {

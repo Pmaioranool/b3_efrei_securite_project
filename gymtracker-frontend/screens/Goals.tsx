@@ -1,8 +1,32 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useApp } from '../context/AppContext';
+import userService from '../services/userService';
 
 const Goals: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useApp();
+  const [apiGoals, setApiGoals] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadGoals = async () => {
+      try {
+        const userData = await userService.getCurrentUser();
+        if (userData.goals) {
+          setApiGoals(userData.goals);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des objectifs:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadGoals();
+  }, []);
+
+  const displayGoals = apiGoals || user.goals;
 
   return (
     <div className="bg-background-light dark:bg-background-dark min-h-screen flex flex-col">

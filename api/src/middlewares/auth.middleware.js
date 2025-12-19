@@ -129,6 +129,70 @@ exports.authorizeOwnResource = (paramName = "id") => {
 };
 
 /**
+ * Middleware pour vérifier que l'utilisateur peut accéder à un workout
+ * Vérifie que l'utilisateur est le propriétaire du workout (ou admin)
+ */
+exports.authorizeWorkoutAccess = async (req, res, next) => {
+  try {
+    // First authenticate the user
+    const token = JWTService.extractTokenFromHeader(req.headers.authorization);
+    if (!token) {
+      return res.status(401).json({
+        error: "Accès non autorisé",
+        message: "Token JWT manquant",
+      });
+    }
+
+    const decoded = JWTService.verifyAccessToken(token);
+    req.user = decoded;
+
+    const userRole = decoded.role || "";
+    const workoutId = req.params.id;
+    const authenticatedUserId = decoded.userId;
+
+    // Admin a accès à tous les workouts
+    if (userRole === "ADMIN") {
+      return next();
+    }
+
+    // Charger le workout
+    const Workout = require("../models/Workout.model");
+    const workout = await Workout.getById(workoutId);
+
+    if (!workout) {
+      return res.status(404).json({
+        error: "Workout non trouvé",
+        message: "Le workout demandé n'existe pas.",
+      });
+    }
+
+    // Pour les templates (userId null ou undefined), tout le monde peut lire
+    if (!workout.userId || workout.template === true) {
+      return next();
+    }
+
+    // Pour les workouts personnels, vérifier que c'est l'utilisateur propriétaire
+    const workoutOwnerStr = String(workout.userId);
+    const userIdStr = String(authenticatedUserId);
+
+    if (workoutOwnerStr !== userIdStr) {
+      return res.status(403).json({
+        error: "Accès refusé",
+        message: "Vous ne pouvez accéder qu'à vos propres workouts.",
+      });
+    }
+
+    req.workout = workout;
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      error: "Accès non autorisé",
+      message: error.message,
+    });
+  }
+};
+
+/**
  * Middleware optionnel d'authentification
  * Décode le token si présent, mais ne bloque pas si absent
  * Utile pour les routes publiques avec contenu personnalisé pour les utilisateurs connectés

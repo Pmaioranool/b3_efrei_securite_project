@@ -1,24 +1,78 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import workoutService from '../services/workoutService';
+import userService from '../services/userService';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, sessions, getWeeklyStats, getHistoryByWeek } = useApp();
   const [hoveredWeek, setHoveredWeek] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ count: 0, duration: 0, calories: 0, volume: 0 });
+  const [apiUser, setApiUser] = useState<any>(null);
+  const [workouts, setWorkouts] = useState<any[]>([]);
   
-  const stats = getWeeklyStats();
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        // Charger les données depuis l'API avec gestion d'erreur individuelle
+        const results = await Promise.allSettled([
+          workoutService.getWeeklyStats(),
+          userService.getCurrentUser(),
+          workoutService.getWorkouts(),
+        ]);
+        
+        // Stats
+        if (results[0].status === 'fulfilled') {
+          setStats(results[0].value);
+        } else {
+          setStats(getWeeklyStats());
+        }
+        
+        // User
+        if (results[1].status === 'fulfilled') {
+          setApiUser(results[1].value);
+        }
+        
+        // Workouts
+        if (results[2].status === 'fulfilled') {
+          setWorkouts(results[2].value);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+        // Fallback vers les données mockées
+        setStats(getWeeklyStats());
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Use API user data if available, fallback to context user
+  const displayUser = apiUser || user;
   const history = getHistoryByWeek();
   
-  // Find last completed session
-  const lastSession = [...sessions]
+  // Find last completed session from API workouts
+  const lastSession = [...workouts]
     .filter(s => s.status === 'completed')
     .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
   
-  const calPercentage = Math.min(100, Math.round((stats.calories / (user.goals.dailyCalories * 7)) * 100));
+  const calPercentage = Math.min(100, Math.round((stats.calories / ((displayUser.goals?.dailyCalories || 2400) * 7)) * 100));
 
   const maxVolume = Math.max(...history.map(h => h.volume), 1);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -28,13 +82,13 @@ const Dashboard: React.FC = () => {
           <Link to="/profile" className="relative">
             <div 
               className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-12 border-2 border-primary shadow-sm" 
-              style={{ backgroundImage: `url("${user.avatar}")` }}
+              style={{ backgroundImage: `url("${displayUser.avatar || 'https://picsum.photos/seed/user/200/200'}")` }}
             ></div>
             <div className="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full border-2 border-white dark:border-[#23220f]"></div>
           </Link>
           <div className="flex flex-col">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Bienvenue,</p>
-            <h2 className="text-lg font-bold leading-tight tracking-tight">{user.name} 👋</h2>
+            <h2 className="text-lg font-bold leading-tight tracking-tight">{displayUser.pseudonym || displayUser.name} 👋</h2>
           </div>
         </div>
         <Link to="/notifications" className="flex items-center justify-center rounded-full size-10 bg-white dark:bg-[#343217] shadow-sm hover:bg-gray-50 dark:hover:bg-[#45421f] transition-colors relative">
@@ -94,7 +148,7 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="flex justify-between text-sm font-medium">
               <span className="text-[#1c1c0d] dark:text-[#fcfcf8]">{stats.calories} Kcal</span>
-              <span className="text-gray-400">{user.goals.dailyCalories * 7} Kcal</span>
+              <span className="text-gray-400">{(displayUser.goals?.dailyCalories || 2400) * 7} Kcal</span>
             </div>
           </div>
         </section>

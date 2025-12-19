@@ -138,9 +138,9 @@ router.get(
  */
 router.post(
   "/",
+  authenticateToken,
   validateRoutineCreation,
   validateCSRFToken,
-  authorizeOwnResource(),
   ctrl.createRoutine
 );
 

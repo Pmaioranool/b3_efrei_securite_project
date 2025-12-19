@@ -17,8 +17,9 @@ const TOKEN_EXPIRY = 30 * 60 * 1000; // 30 minutes
  * });
  */
 const generateCSRFToken = (req, res, next) => {
-  // Identifier l'utilisateur (session ou user ID)
-  const identifier = req.user?.userId || req.ip || "unknown";
+  // Identifier l'utilisateur par IP uniquement pour cohérence entre généré et validé
+  // (userId n'existe pas encore lors de la génération du token pour login)
+  const identifier = req.ip || "unknown";
 
   // Générer un token sécurisé
   const token = crypto.randomBytes(32).toString("hex");
@@ -70,8 +71,8 @@ const validateCSRFToken = (req, res, next) => {
     });
   }
 
-  // Vérifier l'identité
-  const identifier = req.user?.userId || req.ip || "unknown";
+  // Vérifier l'identité par IP uniquement
+  const identifier = req.ip || "unknown";
   if (storedToken.identifier !== identifier) {
     return res.status(403).json({
       error: "CSRF protection",

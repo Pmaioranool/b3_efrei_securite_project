@@ -1,13 +1,31 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip, CartesianGrid, XAxis } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import workoutService from '../services/workoutService';
 
 const Stats: React.FC = () => {
   const navigate = useNavigate();
   const { user, sessions } = useApp();
   const [activeTab, setActiveTab] = useState<'general' | 'sessions'>('general');
   const [selectedSessionName, setSelectedSessionName] = useState<string | null>(null);
+  const [apiStats, setApiStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const stats = await workoutService.getWeeklyStats();
+        setApiStats(stats);
+      } catch (error) {
+        console.error('Erreur lors du chargement des stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStats();
+  }, []);
 
   // --- Logique de données ---
 
