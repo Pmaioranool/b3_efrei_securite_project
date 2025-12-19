@@ -1,16 +1,17 @@
-const mongoose = require("mongoose");
-require("dotenv").config();
+import mongoose from "mongoose";
 
-const mongoUri = process.env.MONGODB_URI;
+export async function connectMongo() {
+  const uri = process.env.MONGO_URI; // adapte si ton projet utilise un autre nom
 
-async function connectMongo() {
+  if (!uri) {
+    console.warn("Mongo non configuré (MONGO_URI manquant) → on démarre sans Mongo.");
+    return;
+  }
+
   try {
-    await mongoose.connect(mongoUri);
-    console.log("Connected to MongoDB database");
-  } catch (error) {
-    console.error("MongoDB connection error:", error);
-    throw error;
+    await mongoose.connect(uri);
+    console.log("Mongo connecté");
+  } catch (err) {
+    console.warn("Mongo indisponible → on démarre sans Mongo.");
   }
 }
-
-module.exports = { connectMongo };

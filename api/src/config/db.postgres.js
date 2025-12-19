@@ -1,12 +1,11 @@
-const { Pool } = require("pg");
-require("dotenv").config();
+import pg from "pg";
+const { Pool } = pg;
 
-const pool = new Pool({
+export const pool = new Pool({
   host: process.env.PGHOST,
+  port: Number(process.env.PGPORT || 5432),
   user: process.env.PGUSER,
   password: process.env.PGPASSWORD,
-  database: process.env.PGNAME,
-  port: process.env.PGPORT,
+  database: process.env.PGDATABASE,
+  // ssl: process.env.PGSSLMODE === "require" ? { rejectUnauthorized: false } : false,
 });
-
-exports.pool = pool;
