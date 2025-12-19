@@ -19,15 +19,10 @@ const { sanitizeXSS } = require("./middlewares/xss.middleware");
 app.use(forceHTTPS);
 
 // Configuration CORS
-app.use(
-  cors()
-  // {
-  // origin: process.env.CLIENT_URL || "http://localhost:3001",
-  // credentials: true,
-  // methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  // allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
-  // }
-);
+app.use(cors({
+  origin: ["https://b3-efrei-securite-project.vercel.app", "http://localhost:5173"], // Ton lien Vercel + Localhost pour dev
+  credentials: true
+}));
 
 app.use(helmetConfig);
 app.use(apiLimiter);
