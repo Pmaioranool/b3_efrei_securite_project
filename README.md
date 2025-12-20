@@ -29,6 +29,19 @@ Variables .env minimales :
 - JWT_ACCESS_SECRET, JWT_REFRESH_SECRET, BCRYPT_SALT_ROUNDS=12
 - DB_INIT_KEY (pour l'init DB côté API)
 
+#### Option Docker (stack complète + jeux de données)
+
+```bash
+cd api
+docker compose down -v        # réinitialise volumes + réimporte les données
+docker compose up --build
+```
+
+- API : http://localhost:3000
+- Mongo : localhost:27017 (2918 exercices importés du CSV)
+- Postgres : localhost:5432 (table users + admin seed)
+- La santé Postgres est vérifiée avant le démarrage de l'API (healthcheck).
+
 ### Frontend (GymTracker)
 
 ```bash

@@ -415,6 +415,20 @@ Le serveur démarre sur `http://localhost:3000` avec rechargement automatique.
 npm start
 ```
 
+### Mode Docker (stack complète avec jeux de données)
+
+```bash
+cd api
+docker compose down -v        # réinitialise les volumes, réimporte le CSV et le seed Postgres
+docker compose up --build
+```
+
+- API : http://localhost:3000
+- MongoDB : mongo:27017 (2918 exercices importés depuis megaGymDataset.csv)
+- PostgreSQL : postgres:5432 (table users + admin seed)
+- Healthcheck Postgres : l'API démarre seulement quand Postgres est prêt
+- Fichier `.env.docker` copié automatiquement en `.env` dans l'image (pensez à remplacer les secrets JWT/DB avant un usage réel)
+
 ### Accès à l'API
 
 - **API** : `http://localhost:3000`
