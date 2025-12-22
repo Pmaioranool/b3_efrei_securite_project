@@ -15,14 +15,15 @@ const {
 } = require("./middlewares/seurity.middleware");
 const { sanitizeXSS } = require("./middlewares/xss.middleware");
 
-// Force HTTPS redirection (doit être avant CORS)
-app.use(forceHTTPS);
-
-// Configuration CORS
+// Configuration CORS - Must be before other middleware
 app.use(cors({
   origin: ["https://b3-efrei-securite-project.vercel.app", "http://localhost:5173"], // Ton lien Vercel + Localhost pour dev
   credentials: true
 }));
+
+// Force HTTPS redirection (doit être avant CORS - WAIT NO, CORS FIRST)
+// Actually standard practice is CORS first.
+app.use(forceHTTPS);
 
 app.use(helmetConfig);
 app.use(apiLimiter);
