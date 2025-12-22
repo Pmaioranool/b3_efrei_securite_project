@@ -20,12 +20,48 @@ const ActiveSession: React.FC = () => {
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string }>();
   const { sessions, templates, completeSession } = useApp();
-  
-  // Robust session lookup: check active sessions first, then templates
+  const [fetchedSession, setFetchedSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadSession = async () => {
+      if (!sessionId) {
+        setLoading(false);
+        return;
+      }
+
+      // 1. Try to find in context first (fastest)
+      const contextSession = sessions.find(s => s.id === sessionId) || templates.find(t => t.id === sessionId);
+      if (contextSession) {
+        setFetchedSession(contextSession);
+        setLoading(false);
+        return;
+      }
+
+      // 2. Fetch from API if not in context
+      try {
+        setLoading(true);
+        const apiSession = await workoutService.getWorkoutById(sessionId);
+        // Map API response to Session type if needed, or assume it matches enough
+        // The API returns 'exercises' with nested 'exercise' details usually, need to ensure structure matches
+        // For now casting it, assuming service returns compatible structure or we might need minor mapping
+        if (apiSession) {
+          setFetchedSession(apiSession as unknown as Session);
+        }
+      } catch (err) {
+        console.error("Failed to load session", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSession();
+  }, [sessionId, sessions, templates]);
+
+  // Robust session lookup: use fetchedSession
   const session = useMemo(() => {
-    if (!sessionId) return sessions[0] || templates[0];
-    return sessions.find(s => s.id === sessionId) || templates.find(t => t.id === sessionId);
-  }, [sessions, templates, sessionId]);
+    return fetchedSession;
+  }, [fetchedSession]);
 
   // Logic States
   const [uiState, setUiState] = useState<UIState>('START_UI');
@@ -34,7 +70,7 @@ const ActiveSession: React.FC = () => {
   const [currentSetIdx, setCurrentSetIdx] = useState(0);
   const [restTimer, setRestTimer] = useState(0);
   const [initialRestTime, setInitialRestTime] = useState(90);
-  
+
   // Timers
   const [globalSeconds, setGlobalSeconds] = useState(0);
   const [setStartTimestamp, setSetStartTimestamp] = useState(0);
@@ -112,7 +148,7 @@ const ActiveSession: React.FC = () => {
     if (!currentEx || !currentSet) return; // Guard against undefined access
 
     const setDuration = Math.floor((Date.now() - setStartTimestamp) / 1000);
-    
+
     // Update Metrics
     setMetrics(prev => {
       const exKey = currentEx.name;
@@ -172,6 +208,16 @@ const ActiveSession: React.FC = () => {
     completedSets += currentSetIdx;
     return Math.round((completedSets / totalSets) * 100);
   }, [currentExIdx, currentSetIdx, session]);
+
+  // Loading State
+  if (loading) {
+    return (
+      <div className="bg-background-light dark:bg-background-dark h-screen flex flex-col items-center justify-center p-6 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+        <p className="text-zinc-500">Chargement de la séance...</p>
+      </div>
+    );
+  }
 
   // Session not found fallback
   if (!session) {
@@ -267,17 +313,17 @@ const ActiveSession: React.FC = () => {
         </div>
 
         <div className="fixed bottom-0 left-0 right-0 p-6 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-t border-gray-100 dark:border-white/10 z-30">
-           <button 
-            onClick={async () => { 
+          <button
+            onClick={async () => {
               try {
                 if (sessionId) {
                   await workoutService.completeWorkout(sessionId);
                 }
-                completeSession(session.id); 
-                navigate('/stats'); 
+                completeSession(session.id);
+                navigate('/stats');
               } catch (error) {
                 console.error('Erreur lors de la complétion:', error);
-                completeSession(session.id); 
+                completeSession(session.id);
                 navigate('/stats');
               }
             }}
@@ -302,8 +348,8 @@ const ActiveSession: React.FC = () => {
           </p>
         </div>
         <div className="bg-primary/10 text-primary px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm border border-primary/10">
-           <span className="material-symbols-outlined text-sm font-bold">timer</span>
-           <span className="text-sm font-black tabular-nums">{formatTime(globalSeconds)}</span>
+          <span className="material-symbols-outlined text-sm font-bold">timer</span>
+          <span className="text-sm font-black tabular-nums">{formatTime(globalSeconds)}</span>
         </div>
       </header>
 
@@ -313,28 +359,28 @@ const ActiveSession: React.FC = () => {
       </div>
 
       <main className="flex-1 flex flex-col p-4 max-w-md mx-auto w-full justify-between items-center overflow-hidden">
-        
+
         {uiState === 'ACTIVE_SET_UI' ? (
           <div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in-95 w-full">
             <div className="text-center mb-10">
-               <div className="flex gap-8 items-baseline justify-center mb-2">
-                  <div className="text-center">
-                    <p className="text-8xl font-black tracking-tighter tabular-nums leading-none">{currentSet?.weight || 0}</p>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-2 block">Kilos</span>
-                  </div>
-                  <div className="text-5xl text-gray-200 dark:text-gray-800 font-thin mb-4">×</div>
-                  <div className="text-center">
-                    <p className="text-8xl font-black tracking-tighter tabular-nums leading-none">{currentSet?.reps || 0}</p>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-2 block">Reps</span>
-                  </div>
-               </div>
-               <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/5 rounded-full text-[10px] font-bold text-primary uppercase tracking-widest mt-4">
-                  <span className="material-symbols-outlined text-xs">bolt</span>
-                  Suivi du temps activé
-               </div>
+              <div className="flex gap-8 items-baseline justify-center mb-2">
+                <div className="text-center">
+                  <p className="text-8xl font-black tracking-tighter tabular-nums leading-none">{currentSet?.weight || 0}</p>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-2 block">Kilos</span>
+                </div>
+                <div className="text-5xl text-gray-200 dark:text-gray-800 font-thin mb-4">×</div>
+                <div className="text-center">
+                  <p className="text-8xl font-black tracking-tighter tabular-nums leading-none">{currentSet?.reps || 0}</p>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-2 block">Reps</span>
+                </div>
+              </div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/5 rounded-full text-[10px] font-bold text-primary uppercase tracking-widest mt-4">
+                <span className="material-symbols-outlined text-xs">bolt</span>
+                Suivi du temps activé
+              </div>
             </div>
 
-            <button 
+            <button
               onClick={handleFinishSet}
               className="size-56 rounded-full bg-primary text-black font-black text-xl shadow-glow shadow-primary/40 active:scale-90 transition-all flex flex-col items-center justify-center gap-2 border-[12px] border-primary-dark/20 relative group"
             >
@@ -349,7 +395,7 @@ const ActiveSession: React.FC = () => {
             <div className="relative size-72 flex items-center justify-center">
               <svg className="absolute inset-0 size-full transform -rotate-90">
                 <circle cx="144" cy="144" r="130" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-gray-100 dark:text-white/5" />
-                <circle cx="144" cy="144" r="130" stroke="currentColor" strokeWidth="12" fill="transparent" 
+                <circle cx="144" cy="144" r="130" stroke="currentColor" strokeWidth="12" fill="transparent"
                   strokeDasharray={816}
                   strokeDashoffset={816 - (816 * restTimer / (initialRestTime || 1))}
                   className="text-primary transition-all duration-1000 ease-linear shadow-glow shadow-primary/20"
@@ -357,14 +403,14 @@ const ActiveSession: React.FC = () => {
                 />
               </svg>
 
-              <button 
+              <button
                 onClick={() => adjustRest(-10)}
                 className="absolute left-[-15px] top-1/2 -translate-y-1/2 size-14 rounded-full bg-white dark:bg-white/10 shadow-xl flex items-center justify-center border border-gray-100 dark:border-white/5 active:scale-90 transition-all hover:bg-gray-50 dark:hover:bg-white/20 z-20 hover:shadow-2xl"
               >
                 <span className="text-sm font-black text-gray-400 dark:text-gray-500">-10s</span>
               </button>
 
-              <button 
+              <button
                 onClick={() => adjustRest(10)}
                 className="absolute right-[-15px] top-1/2 -translate-y-1/2 size-14 rounded-full bg-white dark:bg-white/10 shadow-xl flex items-center justify-center border border-gray-100 dark:border-white/5 active:scale-90 transition-all hover:bg-gray-50 dark:hover:bg-white/20 z-20 hover:shadow-2xl"
               >
@@ -377,7 +423,7 @@ const ActiveSession: React.FC = () => {
               </div>
             </div>
 
-            <button 
+            <button
               onClick={skipRest}
               className="mt-12 px-10 py-4 bg-gray-100 dark:bg-white/5 rounded-3xl flex items-center gap-3 hover:bg-primary/10 transition-all group active:scale-95 border border-transparent hover:border-primary/20 shadow-soft hover:shadow-md"
             >
@@ -391,25 +437,25 @@ const ActiveSession: React.FC = () => {
         <div className="w-full shrink-0 mb-2">
           <div className="bg-white dark:bg-white/5 p-4 rounded-3xl border border-gray-100 dark:border-white/10 flex items-center justify-between shadow-soft hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3">
-               <div className="size-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shadow-sm">
-                  <span className="material-symbols-outlined text-xl">{isLastSetOfEx ? 'forward' : 'layers'}</span>
-               </div>
-               <div className="min-w-0">
-                  <p className="text-[9px] font-bold text-gray-400 uppercase leading-none mb-1">Ensuite</p>
-                  <p className="font-black text-sm truncate max-w-[150px]">
-                     {isLastSetOfEx 
-                      ? (isLastExOfSession ? 'FIN DE SÉANCE' : nextEx?.name) 
-                      : `Série ${currentSetIdx + 2} / ${currentEx?.sets?.length || 0}`}
-                  </p>
-               </div>
+              <div className="size-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shadow-sm">
+                <span className="material-symbols-outlined text-xl">{isLastSetOfEx ? 'forward' : 'layers'}</span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[9px] font-bold text-gray-400 uppercase leading-none mb-1">Ensuite</p>
+                <p className="font-black text-sm truncate max-w-[150px]">
+                  {isLastSetOfEx
+                    ? (isLastExOfSession ? 'FIN DE SÉANCE' : nextEx?.name)
+                    : `Série ${currentSetIdx + 2} / ${currentEx?.sets?.length || 0}`}
+                </p>
+              </div>
             </div>
             <div className="text-right">
-               <p className="text-[9px] font-bold text-gray-400 uppercase leading-none mb-1">Cible</p>
-               <p className="font-black text-sm text-primary">
-                  {isLastSetOfEx 
-                    ? (isLastExOfSession ? 'COMPLETE' : `${nextEx?.sets?.[0]?.weight || 0}kg`) 
-                    : `${nextSet?.weight || 0}kg`}
-               </p>
+              <p className="text-[9px] font-bold text-gray-400 uppercase leading-none mb-1">Cible</p>
+              <p className="font-black text-sm text-primary">
+                {isLastSetOfEx
+                  ? (isLastExOfSession ? 'COMPLETE' : `${nextEx?.sets?.[0]?.weight || 0}kg`)
+                  : `${nextSet?.weight || 0}kg`}
+              </p>
             </div>
           </div>
         </div>
