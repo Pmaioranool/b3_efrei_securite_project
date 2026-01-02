@@ -1,11 +1,11 @@
-const API_URL = import.meta.env.VITE_API_URL || "https://localhost:3000";
+const API_URL = (import.meta.env.VITE_API_URL || "https://localhost:3000").replace(/\/$/, "");
 
 class CsrfService {
   private static instance: CsrfService;
   private currentToken: string | null = null;
   private tokenPromise: Promise<string> | null = null;
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): CsrfService {
     if (!CsrfService.instance) {

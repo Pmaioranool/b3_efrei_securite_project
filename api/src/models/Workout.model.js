@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const WorkoutSchema = new Schema(
   {
     name: { type: String, required: true },
-    userId: { type: Number },
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     // Template : permet de partager le workout entre utilisateurs sans données personnelles (charge, durée)
     template: { type: Boolean, default: false },
     exercises: [

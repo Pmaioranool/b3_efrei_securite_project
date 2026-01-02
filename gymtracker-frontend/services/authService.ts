@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || "https://localhost:3000";
+const API_URL = (import.meta.env.VITE_API_URL || "https://localhost:3000").replace(/\/$/, "");
 import csrfService from "./csrfService";
 
 export interface LoginCredentials {
@@ -29,7 +29,7 @@ export interface AuthResponse {
 class AuthService {
   private static instance: AuthService;
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): AuthService {
     if (!AuthService.instance) {

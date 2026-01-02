@@ -1,14 +1,13 @@
 const router = require("express").Router();
 
-const fs = require("fs");
-const path = require("path");
-const { pool } = require("../config/db.postgres");
 const { connectMongo } = require("../config/db.mongo");
 const { authorizeRoles } = require("../middlewares/auth.middleware");
 const {
   generateCSRFToken,
   validateCSRFToken,
 } = require("../middlewares/csrf.middleware");
+const mongoose = require("mongoose");
+const User = require("../models/User.model"); // Ensure User model is loaded
 
 router.get("/csrf-token", generateCSRFToken, (req, res) => {
   res.json({ token: req.csrfToken });
@@ -17,17 +16,13 @@ router.get("/csrf-token", generateCSRFToken, (req, res) => {
 
 router.get("/test-db", authorizeRoles("ADMIN"), async (req, res) => {
   try {
-    // Test PostgreSQL
-    const pgResult = await pool.query("SELECT NOW()");
-
     // Test MongoDB
     await connectMongo();
 
     res.json({
       status: "ok",
-      postgresql: "Connected successfully",
       mongodb: "Connected successfully",
-      timestamp: pgResult.rows[0].now,
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     res.status(500).json({
@@ -37,9 +32,23 @@ router.get("/test-db", authorizeRoles("ADMIN"), async (req, res) => {
   }
 });
 
-// pas d'autorisation admin pour l'init/reset (clé API requise)
+// Helper function to seed database
+const performSeed = async () => {
+  // Clear Users
+  const UserModel = mongoose.model("User");
+  await UserModel.deleteMany({});
+
+  // Create Admin
+  await User.create({
+    pseudonym: "admin",
+    email: "admin@admin.com",
+    password: "adminpassword", // Will be hashed by User.create
+    role: "ADMIN"
+  });
+  return "Database seeded successfully";
+}
+
 router.post("/db/init", validateCSRFToken, async (req, res) => {
-  // Bloquer en prod/staging par défaut
   if (process.env.NODE_ENV !== "DEVELOPMENT") {
     return res.status(403).json({
       status: "Forbidden",
@@ -56,11 +65,7 @@ router.post("/db/init", validateCSRFToken, async (req, res) => {
   }
 
   try {
-    const sqlFile = fs.readFileSync(
-      path.join(__dirname, "../../sql/init.sql"),
-      "utf8"
-    );
-    await pool.query(sqlFile);
+    await performSeed();
     res.json({ status: "Database initialized" });
   } catch (error) {
     res.status(500).json({
@@ -99,17 +104,8 @@ router.post(
         });
       }
 
-      const sqlResetFile = fs.readFileSync(
-        path.join(__dirname, "../../sql/reset.sql"),
-        "utf8"
-      );
-      await pool.query(sqlResetFile);
+      await performSeed();
 
-      const sqlInitFile = fs.readFileSync(
-        path.join(__dirname, "../../sql/init.sql"),
-        "utf8"
-      );
-      await pool.query(sqlInitFile);
       res.json({ status: "Database initialized after reset" });
     } catch (error) {
       res.status(500).json({
