@@ -5,7 +5,8 @@ const cronParser = require("cron-parser");
 const RoutineSchema = new Schema(
   {
     userId: {
-      type: Number,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
 

@@ -1,7 +1,7 @@
 import authService from "./authService";
 import csrfService from "./csrfService";
 
-const API_URL = import.meta.env.VITE_API_URL || "https://localhost:3000";
+const API_URL = (import.meta.env.VITE_API_URL || "https://localhost:3000").replace(/\/$/, "");
 
 interface RequestOptions extends RequestInit {
   requiresAuth?: boolean;
@@ -11,7 +11,7 @@ interface RequestOptions extends RequestInit {
 class ApiService {
   private static instance: ApiService;
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): ApiService {
     if (!ApiService.instance) {
@@ -81,7 +81,7 @@ class ApiService {
               const retryError = await retryResponse.json().catch(() => ({}));
               throw new Error(
                 retryError.message ||
-                  `HTTP error! status: ${retryResponse.status}`
+                `HTTP error! status: ${retryResponse.status}`
               );
             }
 

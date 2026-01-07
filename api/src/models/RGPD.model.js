@@ -1,4 +1,4 @@
-const { pool } = require("../config/db.postgres");
+const User = require("./User.model");
 const Workout = require("./Workout.model");
 const Routine = require("./Routine.model");
 
@@ -14,22 +14,17 @@ class RGPD {
    * Article 15 RGPD : Droit d'accès
    */
   static async getUserData(userId) {
-    // Données utilisateur PostgreSQL
-    const userResult = await pool.query(
-      "SELECT id, pseudonym, email, role, last_login, created_at, updated_at FROM users WHERE id = $1",
-      [userId]
-    );
+    // Données utilisateur MongoDB
+    const user = await User.getById(userId);
 
-    if (!userResult.rows[0]) {
+    if (!user) {
       throw new Error("Utilisateur non trouvé");
     }
 
-    const user = userResult.rows[0];
-
-    // Données workouts MongoDB (si applicable)
+    // Données workouts MongoDB
     const workouts = await Workout.getByUserId(userId);
 
-    // Données routines MongoDB (si applicable)
+    // Données routines MongoDB
     const routines = await Routine.getByUserId(userId);
 
     return {
@@ -81,8 +76,8 @@ class RGPD {
       console.warn("Erreur suppression workouts:", error.message);
     }
 
-    // 3. Supprimer l'utilisateur PostgreSQL (cascade supprime les dépendances)
-    await pool.query("DELETE FROM users WHERE id = $1", [userId]);
+    // 3. Supprimer l'utilisateur MongoDB
+    await User.delete(userId);
 
     return {
       deleted: true,
@@ -99,10 +94,10 @@ class RGPD {
     const anonymousEmail = `anonymous_${userId}@deleted.local`;
     const anonymousPseudo = `User${userId}_deleted`;
 
-    await pool.query(
-      "UPDATE users SET pseudonym = $1, email = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3",
-      [anonymousPseudo, anonymousEmail, userId]
-    );
+    await User.update(userId, {
+      pseudonym: anonymousPseudo,
+      email: anonymousEmail
+    });
 
     return {
       anonymized: true,

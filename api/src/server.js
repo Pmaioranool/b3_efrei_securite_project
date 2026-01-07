@@ -6,7 +6,7 @@ const path = require("path");
 const app = express();
 const cors = require("cors");
 const PORT = process.env.PORT || 3000;
-const { pool } = require("./config/db.postgres");
+
 const { connectMongo } = require("./config/db.mongo");
 const {
   helmetConfig,
@@ -15,14 +15,15 @@ const {
 } = require("./middlewares/seurity.middleware");
 const { sanitizeXSS } = require("./middlewares/xss.middleware");
 
-// Force HTTPS redirection (doit être avant CORS)
-app.use(forceHTTPS);
-
-// Configuration CORS
+// Configuration CORS - Must be before other middleware
 app.use(cors({
-  origin: ["https://b3-efrei-securite-project.vercel.app", "http://localhost:5173"], // Ton lien Vercel + Localhost pour dev
+  origin: ["https://b3-efrei-securite-project.vercel.app", "http://localhost:5173", "http://localhost:3001"], // Ton lien Vercel + Localhost pour dev
   credentials: true
 }));
+
+// Force HTTPS redirection (doit être avant CORS - WAIT NO, CORS FIRST)
+// Actually standard practice is CORS first.
+app.use(forceHTTPS);
 
 app.use(helmetConfig);
 app.use(apiLimiter);
@@ -38,9 +39,7 @@ async function startServer() {
     // Connexion MongoDB
     await connectMongo();
 
-    // Test PostgreSQL
-    const pgResult = await pool.query("SELECT NOW()");
-    console.log("✅ PostgreSQL connected:", pgResult.rows[0]);
+    console.log("✅ MongoDB connected");
   } catch (error) {
     console.error("Erreur de démarrage:", error);
     process.exit(1);
