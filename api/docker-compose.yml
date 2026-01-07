@@ -2,21 +2,19 @@ version: "3.9"
 services:
   mongo:
     image: mongo:7
+    container_name: gymfit-mongo
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
       - ./megaGymDataset.csv:/megaGymDataset.csv:ro
-    entrypoint: >
-      bash -c "
-        mongod --fork --logpath /var/log/mongodb.log --bind_ip_all;
-        sleep 5;
-        echo '📥 Importation du dataset...';
-        mongoimport --db=gymfit --collection=exercises --type=csv --headerline --file=/megaGymDataset.csv --ignoreBlanks;
-        mongosh --quiet --eval 'db.getSiblingDB(\"gymfit\").exercises.createIndex({Title:1}); db.getSiblingDB(\"gymfit\").exercises.createIndex({BodyPart:1}); db.getSiblingDB(\"gymfit\").exercises.createIndex({Equipment:1}); db.getSiblingDB(\"gymfit\").exercises.createIndex({Level:1}); print(\"✅ MongoDB initialisé\");';
-        mongod --shutdown;
-        mongod --bind_ip_all;
-      "
+      - ./sql/init-mongo.sh:/docker-entrypoint-initdb.d/init-mongo.sh:ro
+    healthcheck:
+      test: mongosh --eval 'db.adminCommand("ping")'
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
 
   postgres:
     image: postgres:15
@@ -39,13 +37,17 @@ services:
 
   api:
     build: ./
+    container_name: gymfit-api
     depends_on:
       mongo:
-        condition: service_started
+        condition: service_healthy
       postgres:
         condition: service_healthy
     ports:
       - "3000:3000"
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/gymfit
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/gymfit
 
 volumes:
   mongo_data:
