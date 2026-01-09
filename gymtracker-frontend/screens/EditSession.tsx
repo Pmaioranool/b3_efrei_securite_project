@@ -177,7 +177,7 @@ const EditSession: React.FC = () => {
       
       await workoutService.updateWorkout(workoutId!, {
         name,
-        userId: parseInt(userId),
+        userId: userId,
         exercises: transformedExercises,
         template: false,
       });
@@ -348,20 +348,18 @@ const EditSession: React.FC = () => {
   }
 
   return (
-    <div className="bg-background-light dark:bg-background-dark min-h-screen pb-40">
+    <div className="bg-background-light dark:bg-background-dark min-h-screen pb-40 relative">
       <header className="sticky top-0 z-50 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800/50">
         <div className="flex items-center justify-between p-4 h-16 max-w-md mx-auto">
           <button onClick={() => navigate('/workouts')} className="flex items-center justify-center size-10 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
             <span className="material-symbols-outlined text-2xl">close</span>
           </button>
           <h1 className="text-base font-bold tracking-tight">Modifier la séance</h1>
-          <button onClick={handleSave} disabled={isSaving} className="bg-primary text-black hover:bg-primary-dark px-5 py-2 rounded-full text-sm font-bold shadow-glow transition-all active:scale-95 disabled:opacity-50">
-             {isSaving ? 'Mise à jour...' : 'Enregistrer'}
-          </button>
+          <div className="w-10"></div>
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-4 pt-6 flex flex-col gap-6">
+      <main className="max-w-md mx-auto px-4 pt-6 flex flex-col gap-6 pb-24">
         {error && (
           <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-r-xl">
             <div className="flex items-start gap-3">
@@ -423,7 +421,8 @@ const EditSession: React.FC = () => {
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-12 gap-1.5 px-4 py-3 text-[10px] font-black text-zinc-400 uppercase bg-white dark:bg-zinc-900/50">
+                  <div className="grid grid-cols-12 gap-1.5 px-4 py-3 text-[10px] font-black text-zinc-400 uppercase bg-white dark:bg-zinc-900/50 text-center">
+                    <div className="col-span-1">#</div>
                     <div className="col-span-2">Reps</div>
                     <div className="col-span-2">Kg</div>
                     <div className="col-span-3">Durée</div>
@@ -469,8 +468,27 @@ const EditSession: React.FC = () => {
               ))}
             </div>
           )}
-        </div>
       </main>
+
+      <div className="fixed bottom-6 left-0 right-0 z-40 px-6 flex justify-center">
+        <button 
+          onClick={handleSave} 
+          disabled={isSaving}
+          className="w-full max-w-sm bg-primary text-black shadow-xl rounded-3xl h-14 flex items-center justify-center gap-3 font-black text-base uppercase tracking-wider shadow-glow hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-70 disabled:grayscale"
+        >
+          {isSaving ? (
+            <>
+              <span className="material-symbols-outlined animate-spin">refresh</span>
+              Enregistrement...
+            </>
+          ) : (
+            <>
+              <span className="material-symbols-outlined font-black">check</span>
+              Enregistrer
+            </>
+          )}
+        </button>
+      </div>
     </div>
   );
 };

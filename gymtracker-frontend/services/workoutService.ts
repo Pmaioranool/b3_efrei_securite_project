@@ -37,7 +37,7 @@ export interface Set {
 
 export interface CreateWorkoutData {
   name: string;
-  userId: number;
+  userId: string;
   template?: boolean;
   exercises: Array<{
     exercise: string; // MongoDB exercise ID

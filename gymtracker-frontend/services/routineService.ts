@@ -45,7 +45,7 @@ class RoutineService {
   /**
    * Get all routines for a specific user
    */
-  async getRoutinesByUserId(userId: number): Promise<Routine[]> {
+  async getRoutinesByUserId(userId: string): Promise<Routine[]> {
     return apiService.get<Routine[]>(`/api/routines/user/${userId}`);
   }
 
@@ -54,7 +54,7 @@ class RoutineService {
    */
   async getMyRoutines(): Promise<Routine[]> {
     const me = await userService.getCurrentUser();
-    const uid = parseInt(me.id as unknown as string, 10);
+    const uid = me.id;
     return this.getRoutinesByUserId(uid);
   }
 

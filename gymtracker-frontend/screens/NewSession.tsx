@@ -163,7 +163,7 @@ const NewSession: React.FC = () => {
       // Save to API
       await workoutService.createWorkout({
         name: name,
-        userId: parseInt(userId),
+        userId: userId,
         exercises: transformedExercises,
         template: false,
       });
@@ -396,13 +396,11 @@ const NewSession: React.FC = () => {
             <span className="material-symbols-outlined text-2xl">close</span>
           </button>
           <h1 className="text-base font-bold tracking-tight">Nouveau Modèle</h1>
-          <button onClick={handleSave} disabled={loading} className="bg-primary text-black hover:bg-primary-dark px-5 py-2 rounded-full text-sm font-bold shadow-glow transition-all active:scale-95 disabled:opacity-50">
-             {loading ? 'Enregistrement...' : 'Enregistrer'}
-          </button>
+          <div className="size-10"></div>
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-4 pt-6 flex flex-col gap-6">
+      <main className="max-w-md mx-auto px-4 pt-6 flex flex-col gap-6 pb-24">
         {error && (
           <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-r-xl">
             <div className="flex items-start gap-3">
@@ -429,6 +427,20 @@ const NewSession: React.FC = () => {
           />
         </div>
 
+        <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-black uppercase tracking-widest">Exercices</h2>
+              <p className="text-[10px] text-zinc-400">{exercises.length} ajoutés</p>
+            </div>
+            <button 
+              onClick={() => setIsPickingExercise(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black font-bold text-xs uppercase tracking-widest hover:scale-[1.05] active:scale-95 transition-all shadow-lg"
+            >
+              <span className="material-symbols-outlined text-sm">add</span>
+              Ajouter
+            </button>
+        </div>
+
         {exercises.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
             <span className="material-symbols-outlined text-6xl mb-4">list_alt</span>
@@ -453,7 +465,7 @@ const NewSession: React.FC = () => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-12 gap-1 px-4 py-2 bg-zinc-50/50 dark:bg-zinc-800/30 text-[9px] font-black text-zinc-400 uppercase tracking-widest text-center">
+              <div className="grid grid-cols-12 gap-1.5 px-4 py-2 bg-zinc-50/50 dark:bg-zinc-800/30 text-[9px] font-black text-zinc-400 uppercase tracking-widest text-center">
                 <div className="col-span-1">#</div>
                 <div className="col-span-2">Reps</div>
                 <div className="col-span-2">Kg</div>
@@ -501,15 +513,26 @@ const NewSession: React.FC = () => {
         )}
       </main>
 
-      <div className="fixed bottom-10 left-0 right-0 z-40 px-6 flex justify-center">
+      <div className="fixed bottom-6 left-0 right-0 z-40 px-6 flex justify-center">
         <button 
-          onClick={() => setIsPickingExercise(true)}
-          className="w-full max-w-sm bg-zinc-900 dark:bg-white text-white dark:text-black shadow-xl rounded-3xl h-16 flex items-center justify-center gap-3 font-black text-base uppercase tracking-wider"
+          onClick={handleSave} 
+          disabled={loading}
+          className="w-full max-w-sm bg-primary text-black shadow-xl rounded-3xl h-14 flex items-center justify-center gap-3 font-black text-base uppercase tracking-wider shadow-glow hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-70 disabled:grayscale"
         >
-          <span className="material-symbols-outlined font-black">add</span>
-          Ajouter un exercice
+          {loading ? (
+             <>
+               <span className="material-symbols-outlined animate-spin">refresh</span>
+               Enregistrement...
+             </>
+          ) : (
+             <>
+               <span className="material-symbols-outlined font-black">check</span>
+               Enregistrer
+             </>
+          )}
         </button>
       </div>
+
     </div>
   );
 };

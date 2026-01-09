@@ -41,12 +41,32 @@ const ActiveSession: React.FC = () => {
       // 2. Fetch from API if not in context
       try {
         setLoading(true);
-        const apiSession = await workoutService.getWorkoutById(sessionId);
-        // Map API response to Session type if needed, or assume it matches enough
-        // The API returns 'exercises' with nested 'exercise' details usually, need to ensure structure matches
-        // For now casting it, assuming service returns compatible structure or we might need minor mapping
+        const apiSession = await workoutService.getWorkoutById(sessionId) as any;
+        
         if (apiSession) {
-          setFetchedSession(apiSession as unknown as Session);
+          // Map API response to Session type
+          const mappedSession: Session = {
+            id: apiSession._id || apiSession.id,
+            name: apiSession.name,
+            date: apiSession.updated_at || new Date().toISOString(),
+            durationMinutes: 45,
+            status: 'planned',
+            exercises: (apiSession.exercises || []).map((ex: any) => ({
+              id: ex.exercise?._id || ex._id || 'unknown',
+              name: ex.exercise?.Title || ex.exercise?.name || 'Unknown Exercise',
+              muscle: ex.exercise?.BodyPart || 'General',
+              type: ex.exercise?.Equipment || 'bodyweight',
+              sets: (ex.sets || []).map((s: any) => ({
+                id: s._id || Math.random().toString(),
+                reps: s.rep || 0,
+                weight: s.weight || 0,
+                durationSeconds: s.duration || 0,
+                restSeconds: s.rest || 60,
+                completed: false
+              }))
+            }))
+          };
+          setFetchedSession(mappedSession);
         }
       } catch (err) {
         console.error("Failed to load session", err);
@@ -175,7 +195,7 @@ const ActiveSession: React.FC = () => {
       };
     });
 
-    const nextRest = isLastSetOfEx ? 120 : (currentSet.restSeconds || 90);
+    const nextRest = currentSet.restSeconds || 90;
     setInitialRestTime(nextRest);
     setRestTimer(nextRest);
 
