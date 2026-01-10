@@ -56,9 +56,13 @@ class RoutineService {
    */
   async getMyRoutines(): Promise<Routine[]> {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     const me = await userService.getCurrentUser();
     const uid = me.id;
     return this.getRoutinesByUserId(uid);
+=======
+    return apiService.get<Routine[]>('/api/routines/user/me');
+>>>>>>> Stashed changes
 =======
     return apiService.get<Routine[]>('/api/routines/user/me');
 >>>>>>> Stashed changes
