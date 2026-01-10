@@ -51,34 +51,7 @@ router.post(
   AuthController.register
 );
 
-/**
- * @openapi
- * /api/auth/register/admin:
- *   post:
- *     summary: Inscription d'un nouvel administrateur (rôle ADMIN forcé)
- *     tags: [Authentication]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/UserInput'
- *     responses:
- *       201:
- *         description: Administrateur créé avec succès
- *       400:
- *         description: Données invalides
- *       409:
- *         description: Utilisateur déjà existant
- */
-router.post(
-  "/register/admin",
-  validateRegister,
-  authorizeRoles("ADMIN"),
-  validateCSRFToken,
-  authLimiter,
-  AuthController.registerAdmin
-);
+
 
 /**
  * @openapi
@@ -118,37 +91,7 @@ router.post(
   AuthController.login
 );
 
-/**
- * @openapi
- * /api/auth/refresh:
- *   post:
- *     summary: Rafraîchir les tokens
- *     tags: [Authentication]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - refreshToken
- *             properties:
- *               refreshToken:
- *                 type: string
- *                 description: Refresh token JWT
- *     responses:
- *       200:
- *         description: Tokens rafraîchis avec succès
- *       401:
- *         description: Refresh token invalide
- */
-router.post(
-  "/refresh",
-  validateRefresh,
-  validateCSRFToken,
-  authLimiter,
-  AuthController.refresh
-);
+
 
 /**
  * @openapi
@@ -167,7 +110,6 @@ router.post(
 router.get(
   "/profile",
   authenticateToken,
-  authorizeOwnResource(),
   AuthController.getProfile
 );
 

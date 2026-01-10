@@ -63,11 +63,32 @@ export type User = {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User>({
-    name: 'Alexandre', email: 'alex@fitness.com', avatar: 'https://picsum.photos/seed/alex/200/200',
-    stats: { age: 28, weight: 78, height: 182 },
-    goals: { weeklyWorkouts: 4, dailyCalories: 2400, targetWeight: 75 }
-  });
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const { default: authService } = await import('../services/authService');
+        const sessionUser = await authService.checkAuthStatus();
+        if (sessionUser) {
+          // Standardize user object if needed, or map fields
+          console.log("Session verified:", sessionUser);
+          // For now, mapping simplified user to User type or ensuring consistency
+          setUser({
+            name: sessionUser.pseudonym || 'User',
+            email: sessionUser.email,
+            avatar: 'https://picsum.photos/seed/user/200/200',
+            stats: { age: 30, weight: 80, height: 180 }, // Placeholder if not in DB
+            goals: { weeklyWorkouts: 3, dailyCalories: 2500, targetWeight: 75 }
+          });
+        }
+      } catch (err) {
+        console.log("No active session");
+      }
+    };
+    checkSession();
+  }, []);
+
 
   const [sessions, setSessions] = useState<Session[]>([]);
   const [templates, setTemplates] = useState<Session[]>([]);
@@ -78,7 +99,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const addSession = (session: Session) => setSessions(prev => [...prev, session]);
   const removeSession = (id: string) => setSessions(prev => prev.filter(s => s.id !== id));
-  
+
   const saveAsTemplate = (session: Session) => {
     const template: Session = { ...session, id: Date.now().toString(), isTemplate: true, status: 'planned' };
     setTemplates(prev => [...prev, template]);
@@ -87,12 +108,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const deleteTemplate = (id: string) => setTemplates(prev => prev.filter(t => t.id !== id));
 
   const updateUser = (upd: Partial<User>) => setUser(prev => ({ ...prev, ...upd }));
-  
+
   const getWeeklyStats = () => {
     const last7 = sessions.filter(s => s.status === 'completed' && new Date(s.date) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
-    return { 
-      count: last7.length, 
-      duration: last7.reduce((a, b) => a + b.durationMinutes, 0), 
+    return {
+      count: last7.length,
+      duration: last7.reduce((a, b) => a + b.durationMinutes, 0),
       calories: last7.reduce((a, b) => a + (b.calories || 0), 0),
       volume: last7.reduce((a, b) => a + calculateVolume(b), 0)
     };
@@ -121,11 +142,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   return (
-    <AppContext.Provider value={{ 
-      user, sessions, templates, 
-      completeSession, addSession, removeSession, 
-      saveAsTemplate, deleteTemplate, updateUser, 
-      getWeeklyStats, getHistoryByWeek 
+    <AppContext.Provider value={{
+      user, sessions, templates,
+      completeSession, addSession, removeSession,
+      saveAsTemplate, deleteTemplate, updateUser,
+      getWeeklyStats, getHistoryByWeek
     }}>
       {children}
     </AppContext.Provider>

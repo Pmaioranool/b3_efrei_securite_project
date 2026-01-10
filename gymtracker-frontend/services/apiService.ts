@@ -1,7 +1,7 @@
 import authService from "./authService";
 import csrfService from "./csrfService";
 
-const API_URL = (import.meta.env.VITE_API_URL || "https://localhost:3000").replace(/\/$/, "");
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/$/, "");
 
 interface RequestOptions extends RequestInit {
   requiresAuth?: boolean;
@@ -30,21 +30,12 @@ class ApiService {
 
     const config: RequestInit = {
       ...restOptions,
+      credentials: "include", // Essential for cookies
       headers: {
         "Content-Type": "application/json",
         ...headers,
       },
     };
-
-    // Add authorization header if required
-    if (requiresAuth) {
-      const token = authService.getAccessToken();
-      if (token) {
-        (config.headers as Record<string, string>)[
-          "Authorization"
-        ] = `Bearer ${token}`;
-      }
-    }
 
     // Add CSRF token for state-changing requests
     const method = (config.method || "GET").toUpperCase();
@@ -54,7 +45,6 @@ class ApiService {
         (config.headers as Record<string, string>)["X-CSRF-Token"] = csrfToken;
       } catch (error) {
         console.error("Failed to get CSRF token:", error);
-        // Continue without CSRF token, server will reject if required
       }
     }
 
@@ -71,18 +61,14 @@ class ApiService {
           try {
             // Refresh CSRF token
             const newCsrfToken = await csrfService.refreshToken();
-            (config.headers as Record<string, string>)["X-CSRF-Token"] =
-              newCsrfToken;
+            (config.headers as Record<string, string>)["X-CSRF-Token"] = newCsrfToken;
 
             // Retry the request with new CSRF token
             const retryResponse = await fetch(`${API_URL}${endpoint}`, config);
 
             if (!retryResponse.ok) {
               const retryError = await retryResponse.json().catch(() => ({}));
-              throw new Error(
-                retryError.message ||
-                `HTTP error! status: ${retryResponse.status}`
-              );
+              throw new Error(retryError.message || `HTTP error! status: ${retryResponse.status}`);
             }
 
             const contentType = retryResponse.headers.get("content-type");
@@ -97,37 +83,11 @@ class ApiService {
         }
       }
 
-      // Handle 401 Unauthorized - try to refresh token
+      // Handle 401 Unauthorized - Session Expired
       if (response.status === 401 && requiresAuth) {
-        try {
-          const newToken = await authService.refreshAccessToken();
-          // Retry the request with new token
-          (config.headers as Record<string, string>)[
-            "Authorization"
-          ] = `Bearer ${newToken}`;
-
-          // Also refresh CSRF token if needed
-          if (
-            requiresCsrf &&
-            ["POST", "PUT", "PATCH", "DELETE"].includes(method)
-          ) {
-            const newCsrfToken = await csrfService.refreshToken();
-            (config.headers as Record<string, string>)["X-CSRF-Token"] =
-              newCsrfToken;
-          }
-
-          const retryResponse = await fetch(`${API_URL}${endpoint}`, config);
-
-          if (!retryResponse.ok) {
-            throw new Error(`HTTP error! status: ${retryResponse.status}`);
-          }
-
-          return await retryResponse.json();
-        } catch (refreshError) {
-          // Refresh failed, redirect to login
-          window.location.href = "#/login";
-          throw new Error("Session expired. Please login again.");
-        }
+        // No token refresh logic anymore. Session is dead.
+        window.location.href = "#/login";
+        throw new Error("Session expired. Please login again.");
       }
 
       if (!response.ok) {

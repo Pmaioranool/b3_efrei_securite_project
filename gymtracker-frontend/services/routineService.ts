@@ -1,5 +1,4 @@
 import apiService from "./apiService";
-import userService from "./userService";
 
 export interface Routine {
   id: string;
@@ -28,12 +27,15 @@ export interface CreateRoutineData {
   workoutId: string; // MongoDB workout ObjectId
   cron: string; // standard 5-field cron expression
   timezone?: string;
+  intervalWeeks?: number;
+  activeWeeks?: number[];
+  startDate?: string;
 }
 
 class RoutineService {
   private static instance: RoutineService;
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): RoutineService {
     if (!RoutineService.instance) {
@@ -53,9 +55,13 @@ class RoutineService {
    * Get all routines for current user (helper)
    */
   async getMyRoutines(): Promise<Routine[]> {
+<<<<<<< Updated upstream
     const me = await userService.getCurrentUser();
     const uid = me.id;
     return this.getRoutinesByUserId(uid);
+=======
+    return apiService.get<Routine[]>('/api/routines/user/me');
+>>>>>>> Stashed changes
   }
 
   /**

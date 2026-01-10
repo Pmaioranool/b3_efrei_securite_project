@@ -47,6 +47,29 @@ router.get("/", authorizeRoles("admin"), ctrl.getRoutine);
 
 /**
  * @openapi
+ * /api/routines/user/me:
+ *   get:
+ *     summary: Récupérer les routines de l'utilisateur connecté
+ *     description: Retourne la liste des routines de l'utilisateur authentifié
+ *     tags: [Routines]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des routines récupérée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Routine'
+ *       500:
+ *         description: Erreur serveur
+ */
+router.get("/user/me", authenticateToken, ctrl.getRoutinesByCurrentUser);
+
+/**
+ * @openapi
  * /api/routines/{id}:
  *   get:
  *     summary: Récupérer une routine par ID
@@ -184,7 +207,6 @@ router.put(
   "/:id",
   validateRoutineCreation,
   validateCSRFToken,
-  authorizeOwnResource(),
   ctrl.updateRoutine
 );
 
@@ -223,7 +245,6 @@ router.put(
 router.delete(
   "/:id",
   validateCSRFToken,
-  authorizeOwnResource(),
   ctrl.deleteRoutine
 );
 

@@ -33,6 +33,32 @@ app.use(express.json());
 // Sanitization XSS : nettoyer les inputs
 app.use(sanitizeXSS);
 
+// Session Configuration
+const session = require("express-session");
+let MongoStore = require("connect-mongo");
+if (MongoStore.default) {
+  MongoStore = MongoStore.default;
+}
+
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || "supersecretkey",
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI,
+    collectionName: 'sessions',
+    ttl: 14 * 24 * 60 * 60 // 14 days
+  }),
+  cookie: {
+    httpOnly: true,
+    secure: false, // Force false for dev/localhost stability
+    sameSite: 'lax',
+    maxAge: 14 * 24 * 60 * 60 * 1000 // 14 days
+  }
+}));
+
+
 // Connexion aux bases de données avant de démarrer le serveur
 async function startServer() {
   try {
